@@ -11,18 +11,43 @@ A Flask-based academic dashboard prototype for students, advisors, parents, and 
 - AI advisory engine using rule-based predictions with a Random Forest design scaffold.
 
 ## Run locally
-1. Install PostgreSQL and create a database named `exampler`.
-2. Create a Python environment.
+1. Create a Python environment:
+   ```bash
+   python -m venv .venv
+   ```
+2. Activate the environment:
+   - Windows PowerShell:
+     ```powershell
+     .\.venv\Scripts\Activate.ps1
+     ```
+   - Windows cmd:
+     ```cmd
+     .\.venv\Scripts\activate.bat
+     ```
+   - macOS / Linux:
+     ```bash
+     source .venv/bin/activate
+     ```
 3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-4. Set up environment variables (see PostgreSQL setup below).
-5. Start the server:
+4. Copy `.env.example` to `.env` if you want to override defaults:
+   ```bash
+   copy .env.example .env
+   ```
+5. Run the app:
    ```bash
    python app.py
    ```
-6. Open `http://127.0.0.1:5000`.
+6. Open `http://127.0.0.1:5000` in your browser.
+
+### Notes
+- This app requires PostgreSQL and will not start without a valid `DATABASE_URL`.
+- Set `DATABASE_URL` to a PostgreSQL URI, for example:
+  ```bash
+  DATABASE_URL=postgresql://user:password@localhost:5432/exampler
+  ```
 
 ## Sample Accounts
 - admin@example.com / admin123

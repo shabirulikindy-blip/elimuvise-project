@@ -53,11 +53,21 @@ def setup_database():
     global _db_initialized
     if _db_initialized:
         return
+
     db.create_all()
     upgrade_schema()
-    seed_sample_data()
+
+    if User.query.count() == 0:
+        seed_sample_data()
+
     run_prediction_engine(db)
     _db_initialized = True
+
+
+@app.before_request
+def initialize_database():
+    setup_database()
+
 
 def log_event(event_type, description):
     entry = SystemLog(event_type=event_type, description=description)
@@ -65,13 +75,8 @@ def log_event(event_type, description):
     db.session.commit()
 
 def seed_sample_data():
-    # Drop all existing data to reseed
-    db.session.query(Notification).delete()
-    db.session.query(Alert).delete()
-    db.session.query(Result).delete()
-    db.session.query(Student).delete()
-    db.session.query(User).delete()
-    db.session.commit()
+    if User.query.count() > 0:
+        return
 
     admin = User(name='System Admin', username='ElimuVISE', password_hash=generate_password_hash('admin2026'), role='admin', approved=True)
     advisor = User(name='Lead Advisor', email='advisor@example.com', password_hash=generate_password_hash('advisor123'), role='advisor', school_name='Example School', subjects='Math,Science', phone='1234567890', home_address='123 Main St', approved=True)
@@ -104,7 +109,6 @@ def seed_sample_data():
 
 @app.route('/')
 def index():
-    setup_database()
     if current_user.is_authenticated:
         if current_user.role == 'student':
             return redirect(url_for('student_dashboard'))
@@ -118,7 +122,6 @@ def index():
 
 @app.route('/home')
 def home():
-    setup_database()
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     return render_template('home.html')
