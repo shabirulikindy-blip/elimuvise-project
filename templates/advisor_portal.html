@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2>Advisor Priority Portal</h2>
+    <p class="text-muted">Quickly identify students who need urgent intervention.</p>
+  </div>
+  <div>
+    <a class="btn btn-outline-primary me-2" href="{{ url_for('register_student') }}">Register Student</a>
+    <a class="btn btn-primary" href="{{ url_for('upload_results') }}">Upload Results</a>
+  </div>
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="card text-white bg-primary h-100 shadow-sm">
+      <div class="card-body">
+        <h5>Total Students</h5>
+        <h2>{{ total_students }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-danger h-100 shadow-sm">
+      <div class="card-body">
+        <h5>At-Risk</h5>
+        <h2>{{ at_risk }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-warning h-100 shadow-sm">
+      <div class="card-body">
+        <h5>Average</h5>
+        <h2>{{ average }}</h2>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-lg-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Notifications</h5>
+        {% if notifications %}
+          <ul class="list-group list-group-flush">
+            {% for note in notifications %}
+              <li class="list-group-item">{{ note.created_at.strftime('%b %d %H:%M') }} — {{ note.message }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No notifications yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Priority List</h5>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Form</th>
+            <th>Combination</th>
+            <th>Attendance</th>
+            <th>Status</th>
+            <th>AI Risk</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in priority_list %}
+            <tr>
+              <td>{{ student.user.name }}</td>
+              <td>{{ student.form_level }}</td>
+              <td>{{ student.combination }}</td>
+              <td>{{ student.attendance_rate }}%</td>
+              <td><span class="badge bg-{{ 'danger' if student.prediction == 'At-Risk' else 'warning' if student.prediction == 'Average' else 'success' }}">{{ student.prediction }}</span></td>
+              <td>
+                {% if student_assessments[student.id]['risk_level'] == 'high' %}
+                  <span class="badge bg-danger">High Risk</span>
+                {% elif student_assessments[student.id]['risk_level'] == 'medium' %}
+                  <span class="badge bg-warning">Medium Risk</span>
+                {% else %}
+                  <span class="badge bg-success">Low Risk</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Review
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#assessmentModal{{ student.id }}">AI Assessment</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <form method="post" action="{{ url_for('send_alert', student_id=student.id) }}" class="dropdown-item-form">
+                        <input type="hidden" name="message" value="Please schedule a meeting with your advisor to discuss academic support.">
+                        <button type="submit" class="dropdown-item">Send Alert</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- AI Assessment Modals -->
+{% for student in priority_list %}
+<div class="modal fade" id="assessmentModal{{ student.id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">AI Risk Assessment - {{ student.user.name }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Key Concerns</h6>
+            <ul class="list-group list-group-flush">
+              {% for concern in student_assessments[student.id]['concerns'] %}
+                <li class="list-group-item text-danger">{{ concern }}</li>
+              {% else %}
+                <li class="list-group-item text-muted">No major concerns identified</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Strengths</h6>
+            <ul class="list-group list-group-flush">
+              {% for strength in student_assessments[student.id]['strengths'] %}
+                <li class="list-group-item text-success">{{ strength }}</li>
+              {% else %}
+                <li class="list-group-item text-muted">Strengths to be determined after more data</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        
+        <div class="mt-4">
+          <h6>Recommended Interventions</h6>
+          <div class="alert alert-info">
+            <ul class="mb-0">
+              {% for intervention in student_assessments[student.id]['interventions'] %}
+                <li>{{ intervention }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

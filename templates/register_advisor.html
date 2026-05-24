@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Register Advisor</h4>
+        <form method="post">
+          <div class="row gy-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name</label>
+              <input class="form-control" name="name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input class="form-control" name="email" type="email" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Password</label>
+              <input class="form-control" name="password" type="password" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">School Name</label>
+              <input class="form-control" name="school_name" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Subjects</label>
+              <input class="form-control" name="subjects" placeholder="e.g., Math, Science" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone Number</label>
+              <input class="form-control" name="phone" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Home Address</label>
+              <textarea class="form-control" name="home_address" rows="3" required></textarea>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button class="btn btn-primary">Register Advisor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

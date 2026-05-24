@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2>Admin Dashboard</h2>
+    <p class="text-muted">Institutional view for resource planning and system oversight.</p>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Search</h5>
+        <input type="text" id="searchInput" class="form-control" placeholder="Search schools, students, advisors, results...">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Total Students</h5>
+        <h2>{{ total_students }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Total Advisors</h5>
+        <h2>{{ total_teachers }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Risk Subjects</h5>
+        <p class="mb-0">Subjects with most uploaded results.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Pending User Approvals</h5>
+        {% if pending_users %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Name</th>
+                  <th>Email/Username</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="searchable-table" id="pendingUsersTable">
+                {% for user in pending_users %}
+                  <tr>
+                    <td><span class="badge bg-info">{{ user.role|upper }}</span></td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email or user.username }}</td>
+                    <td>
+                      {% set user_data = {
+                        'id': user.id,
+                        'name': user.name,
+                        'role': user.role,
+                        'email': user.email or user.username,
+                        'username': user.username or '',
+                        'phone': user.phone or '',
+                        'address': user.home_address or '',
+                        'school': user.school_name or '',
+                        'subjects': user.subjects or '',
+                        'form_level': user.student_profile.form_level if user.student_profile else '',
+                        'combination': user.student_profile.combination if user.student_profile else '',
+                        'attendance_rate': user.student_profile.attendance_rate if user.student_profile else ''
+                      } %}
+                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#userDetailsModal"
+                        data-user='{{ user_data|tojson|safe }}' onclick="loadUserDetails(this)">
+                        <i class="bi bi-eye me-1"></i>View Details
+                      </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted">No pending approvals.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Failed Login Attempts</h5>
+        <ul class="list-group list-group-flush searchable-list" id="failedLoginsList">
+          {% for event in failed_logins %}
+            <li class="list-group-item small text-muted">{{ event.timestamp.strftime('%b %d %H:%M') }} — {{ event.description }}</li>
+          {% else %}
+            <li class="list-group-item">No failed login attempts yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4 mt-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">School List</h5>
+        {% if school_list %}
+          <ul class="list-group list-group-flush searchable-list" id="schoolsList">
+            {% for school in school_list %}
+              <li class="list-group-item">{{ school }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No registered schools yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Advisor List</h5>
+        {% if teachers %}
+          <ul class="list-group list-group-flush searchable-list" id="advisorsList">
+            {% for teacher in teachers %}
+              <li class="list-group-item">
+                {{ teacher.name }} — {{ teacher.email }}
+                {% if not teacher.approved %}
+                  <span class="badge bg-warning text-dark ms-2">Pending</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No advisors registered yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4 mt-4">
+  <div class="col-lg-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">System Logs</h5>
+        <ul class="list-group list-group-flush searchable-list" id="systemLogsList">
+          {% for log in logs %}
+            <li class="list-group-item small text-muted">{{ log.timestamp.strftime('%b %d %H:%M') }} — {{ log.event_type }}: {{ log.description }}</li>
+          {% else %}
+            <li class="list-group-item">No log entries yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-4 mt-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">All Students</h5>
+        {% if all_students %}
+          <ul class="list-group list-group-flush searchable-list" id="studentsList">
+            {% for student in all_students %}
+              <li class="list-group-item">
+                {{ student.name }} — {{ student.email or student.username }}
+                {% if not student.approved %}
+                  <span class="badge bg-warning text-dark ms-2">Pending</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No students registered yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">All Results</h5>
+        {% if all_results %}
+          <ul class="list-group list-group-flush searchable-list" id="resultsList">
+            {% for result in all_results %}
+              <li class="list-group-item">
+                {{ result.student.user.name }} — {{ result.subject }}: {{ result.score }} ({{ result.assessment_name }})
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted">No results uploaded yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">User Registration Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Full Name</h6>
+            <p id="modalUserName" class="fw-bold"></p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">Role</h6>
+            <p><span id="modalUserRole" class="badge"></span></p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Email Address</h6>
+            <p id="modalUserEmail" class="text-break"></p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">Phone Number</h6>
+            <p id="modalUserPhone"></p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Home Address</h6>
+            <p id="modalUserAddress" class="text-break"></p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">School Name</h6>
+            <p id="modalUserSchool"></p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Username</h6>
+            <p id="modalUserUsername"></p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">Form Level</h6>
+            <p id="modalUserFormLevel"></p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Combination</h6>
+            <p id="modalUserCombination"></p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">Attendance %</h6>
+            <p id="modalUserAttendance"></p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <h6 class="text-muted">Subjects (for Advisors)</h6>
+            <p id="modalUserSubjects"></p>
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <strong>Review Information:</strong> Please review all the details above before approving or rejecting this registration. Make sure all information is complete and accurate.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <form id="rejectForm" method="post" class="d-inline" style="display: none;">
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-x-circle me-1"></i>Reject
+          </button>
+        </form>
+        <form id="approveForm" method="post" class="d-inline" style="display: none;">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle me-1"></i>Approve
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function loadUserDetails(button) {
+  const user = JSON.parse(button.dataset.user || '{}');
+  document.getElementById('modalUserName').textContent = user.name || 'Not provided';
+  
+  const roleElement = document.getElementById('modalUserRole');
+  roleElement.textContent = (user.role || 'unknown').toUpperCase();
+  roleElement.className = 'badge ' + (user.role === 'advisor' ? 'bg-primary' : user.role === 'parent' ? 'bg-success' : 'bg-secondary');
+  
+  document.getElementById('modalUserEmail').textContent = user.email || 'Not provided';
+  document.getElementById('modalUserUsername').textContent = user.username || 'Not applicable';
+  document.getElementById('modalUserPhone').textContent = user.phone || 'Not provided';
+  document.getElementById('modalUserAddress').textContent = user.address || 'Not provided';
+  document.getElementById('modalUserSchool').textContent = user.school || 'Not applicable';
+  document.getElementById('modalUserSubjects').textContent = user.subjects || 'Not applicable';
+  document.getElementById('modalUserFormLevel').textContent = user.form_level || 'Not applicable';
+  document.getElementById('modalUserCombination').textContent = user.combination || 'Not applicable';
+  document.getElementById('modalUserAttendance').textContent = user.attendance_rate || 'Not applicable';
+  
+  document.getElementById('approveForm').action = '{{ url_for("approve_user", user_id=0) }}'.replace('/0', '/' + user.id);
+  document.getElementById('rejectForm').action = '{{ url_for("reject_user", user_id=0) }}'.replace('/0', '/' + user.id);
+  
+  document.getElementById('approveForm').style.display = 'inline';
+  document.getElementById('rejectForm').style.display = 'inline';
+}
+</script>
+
+<script>
+document.getElementById('searchInput').addEventListener('input', function() {
+  const searchTerm = this.value.toLowerCase();
+  // Filter lists
+  document.querySelectorAll('.searchable-list li').forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(searchTerm) ? '' : 'none';
+  });
+  // Filter table rows
+  document.querySelectorAll('.searchable-table tr').forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? '' : 'none';
+  });
+});
+</script>
+
+{% endblock %}

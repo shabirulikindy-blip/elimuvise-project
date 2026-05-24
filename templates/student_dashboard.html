@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2>Student Dashboard</h2>
+    <p class="text-muted">Academic Health view for Form 5 / Form 6 students.</p>
+  </div>
+  <span class="badge bg-{{ badge_class }} fs-6">AI Prediction: {{ student.prediction }}</span>
+</div>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Performance Trend</h5>
+        <canvas id="trendChart" height="220"></canvas>
+      </div>
+    </div>
+    <div class="card shadow-sm mt-4">
+      <div class="card-body">
+        <h5 class="card-title">AI-Powered Study Tips</h5>
+        <div class="alert alert-primary">
+          <ul class="mb-0">
+            {% for tip in study_tips %}
+              <li class="mb-2">{{ tip }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Subject Breakdown</h5>
+        <div class="mb-3"><strong>Combination:</strong> {{ student.combination }}</div>
+        <div class="mb-3"><strong>Attendance:</strong> {{ student.attendance_rate }}%</div>
+        <div class="list-group">
+          {% for subject, score in subject_breakdown.items() %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              {{ subject }}
+              <span class="badge bg-secondary">{{ '%.1f' | format(score) }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Recent Alerts</h5>
+        <ul class="list-group list-group-flush">
+          {% for alert in alerts %}
+            <li class="list-group-item small text-muted">{{ alert.created_at.strftime('%b %d, %Y') }} - {{ alert.message }}</li>
+          {% else %}
+            <li class="list-group-item">No alerts yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const trendLabels = {{ results | map(attribute='assessment_name') | list | tojson }};
+const trendData = {{ results | map(attribute='score') | list | tojson }};
+createLineChart('trendChart', trendLabels, trendData, 'Grade Trends');
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <h2 class="mb-4">Account Settings</h2>
+
+      <!-- Tabs Navigation -->
+      <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+            <i class="bi bi-person me-2"></i>Profile Information
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab">
+            <i class="bi bi-key me-2"></i>Change Password
+          </button>
+        </li>
+      </ul>
+
+      <!-- Tabs Content -->
+      <div class="tab-content" id="settingsTabContent">
+        
+        <!-- Profile Tab -->
+        <div class="tab-pane fade show active" id="profile" role="tabpanel">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title mb-4">Update Your Profile</h5>
+              <form method="POST" action="{{ url_for('account_settings') }}">
+                <input type="hidden" name="action" value="update_profile">
+                
+                <div class="mb-3">
+                  <label for="name" class="form-label">Full Name</label>
+                  <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" required>
+                </div>
+
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email Address</label>
+                  <input type="email" class="form-control" id="email" name="email" value="{{ user.email or '' }}" required>
+                  <small class="form-text text-muted">Your login email address</small>
+                </div>
+
+                <div class="mb-3">
+                  <label for="phone" class="form-label">Phone Number</label>
+                  <input type="text" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                </div>
+
+                <div class="mb-3">
+                  <label for="home_address" class="form-label">Home Address</label>
+                  <textarea class="form-control" id="home_address" name="home_address" rows="3">{{ user.home_address or '' }}</textarea>
+                </div>
+
+                {% if user.role == 'advisor' %}
+                <div class="alert alert-info" role="alert">
+                  <strong>Advisor Information:</strong>
+                  <ul class="mb-0 mt-2">
+                    <li>School: {{ user.school_name or 'Not set' }}</li>
+                    <li>Subjects: {{ user.subjects or 'Not set' }}</li>
+                  </ul>
+                  <small class="text-muted d-block mt-2">Contact admin to modify advisor-specific information</small>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check-circle me-2"></i>Save Changes
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Tab -->
+        <div class="tab-pane fade" id="password" role="tabpanel">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title mb-4">Change Your Password</h5>
+              <form method="POST" action="{{ url_for('account_settings') }}">
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="mb-3">
+                  <label for="old_password" class="form-label">Current Password</label>
+                  <input type="password" class="form-control" id="old_password" name="old_password" required>
+                  <small class="form-text text-muted">Enter your current password to verify your identity</small>
+                </div>
+
+                <hr>
+
+                <div class="mb-3">
+                  <label for="new_password" class="form-label">New Password</label>
+                  <input type="password" class="form-control" id="new_password" name="new_password" required minlength="6">
+                  <small class="form-text text-muted">Minimum 6 characters</small>
+                </div>
+
+                <div class="mb-3">
+                  <label for="confirm_password" class="form-label">Confirm New Password</label>
+                  <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
+                  <small class="form-text text-muted">Must match the new password above</small>
+                </div>
+
+                <div class="alert alert-warning" role="alert">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  <strong>Security Note:</strong> Keep your password secure and never share it with anyone. Use a strong password combining uppercase, lowercase, numbers, and symbols.
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-check-circle me-2"></i>Update Password
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Additional Info -->
+      <div class="mt-4 alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Account Information:</strong>
+        <ul class="mb-0 mt-2">
+          <li><strong>Role:</strong> <span class="badge bg-primary">{{ user.role | upper }}</span></li>
+          <li><strong>Account Status:</strong> <span class="badge {% if user.approved %}bg-success{% elif user.rejected %}bg-danger{% else %}bg-warning{% endif %}">
+            {% if user.approved %}Approved{% elif user.rejected %}Rejected{% else %}Pending Approval{% endif %}
+          </span></li>
+          <li><strong>Username:</strong> {{ user.username or user.email }}</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

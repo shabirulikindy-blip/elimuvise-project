@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title mb-4 text-center">Register</h3>
+        <form method="post" id="registration-form">
+          <div class="mb-3">
+            <label class="form-label">Select Role</label>
+            <select class="form-select" id="rule" name="rule" required>
+              <option value="" {% if selected_role == '' %}selected{% endif %}>Choose role</option>
+              <option value="advisor" {% if selected_role == 'advisor' %}selected{% endif %}>Advisor</option>
+              <option value="parent" {% if selected_role == 'parent' %}selected{% endif %}>Parent</option>
+              <option value="student" {% if selected_role == 'student' %}selected{% endif %}>Student</option>
+            </select>
+          </div>
+
+          <div id="advisor-fields" style="display:none;">
+            <div class="row gy-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input class="form-control" name="name" type="text">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input class="form-control" name="email" type="email">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Password</label>
+                <input class="form-control" name="password" type="password">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">School Name</label>
+                <input class="form-control" name="school_name" type="text">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Subjects</label>
+                <input class="form-control" name="subjects" placeholder="e.g., Math, Science" type="text">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone Number</label>
+                <input class="form-control" name="phone" type="text">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Home Address</label>
+                <textarea class="form-control" name="home_address" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="parent-fields" style="display:none;">
+            <div class="row gy-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input class="form-control" name="name" type="text">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input class="form-control" name="email" type="email">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone Number</label>
+                <input class="form-control" name="phone" type="text">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Password</label>
+                <input class="form-control" name="password" type="password">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Home Address</label>
+                <textarea class="form-control" name="home_address" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="student-message" class="alert alert-info" style="display:none;">
+            Students must be registered by an advisor. Please ask your advisor for a username and password and then log in on the login page.
+          </div>
+
+          <div class="mt-4">
+            <button class="btn btn-primary" type="submit">Continue</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const ruleSelect = document.getElementById('rule');
+  const advisorFields = document.getElementById('advisor-fields');
+  const parentFields = document.getElementById('parent-fields');
+  const studentMessage = document.getElementById('student-message');
+  const registrationForm = document.getElementById('registration-form');
+
+  function updateVisibleFields() {
+    advisorFields.style.display = ruleSelect.value === 'advisor' ? 'block' : 'none';
+    parentFields.style.display = ruleSelect.value === 'parent' ? 'block' : 'none';
+    studentMessage.style.display = ruleSelect.value === 'student' ? 'block' : 'none';
+
+    if (ruleSelect.value === 'student') {
+      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = false);
+      parentFields.querySelectorAll('input').forEach(i => i.required = false);
+    } else if (ruleSelect.value === 'advisor') {
+      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = true);
+      parentFields.querySelectorAll('input').forEach(i => i.required = false);
+    } else if (ruleSelect.value === 'parent') {
+      parentFields.querySelectorAll('input').forEach(i => i.required = true);
+      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = false);
+    } else {
+      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = false);
+      parentFields.querySelectorAll('input').forEach(i => i.required = false);
+    }
+  }
+
+  ruleSelect.addEventListener('change', updateVisibleFields);
+
+  const initialRule = "{{ selected_role|default('') }}";
+  if (initialRule) {
+    ruleSelect.value = initialRule;
+    updateVisibleFields();
+  }
+
+  registrationForm.addEventListener('submit', function (event) {
+    if (ruleSelect.value === 'student') {
+      event.preventDefault();
+      window.location.href = "{{ url_for('login') }}";
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2>Parent Portal</h2>
+    <p class="text-muted">Transparent Bridge for real-time progress updates.</p>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Child's Status Summary</h5>
+        <p><strong>Name:</strong> {{ student.user.name }}</p>
+        <p><strong>Form:</strong> {{ student.form_level }}</p>
+        <p><strong>Combination:</strong> {{ student.combination }}</p>
+        <p><strong>Status:</strong> <span class="badge bg-{{ badge_class }}">{{ student.prediction }}</span></p>
+        <div class="progress mt-3" style="height: 20px;">
+          <div class="progress-bar bg-info" role="progressbar" style="width: {{ student.attendance_rate }}%;" aria-valuenow="{{ student.attendance_rate }}" aria-valuemin="0" aria-valuemax="100">Attendance {{ student.attendance_rate }}%</div>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Advisor Contact</h5>
+        <p>If you need follow-up, please contact your advisor directly at <strong>advisor@example.com</strong>.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Real-Time Alert Feed</h5>
+        <ul class="list-group list-group-flush">
+          {% for alert in alerts %}
+            <li class="list-group-item">
+              <strong>{{ alert.created_at.strftime('%b %d') }}</strong> — {{ alert.message }}
+            </li>
+          {% else %}
+            <li class="list-group-item">No alerts at the moment.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
