@@ -6,11 +6,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 from sqlalchemy import text
 from dotenv import load_dotenv
+
+load_dotenv()
+
 from config import Config
 from models import db, User, Student, Result, Alert, SystemLog, Notification
 from advisory_engine import run_prediction_engine, generate_study_tips, get_badge_class, get_risk_assessment, generate_advisor_recommendations
-
-load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
