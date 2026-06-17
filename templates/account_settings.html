@@ -28,7 +28,8 @@
           <div class="card shadow-sm">
             <div class="card-body">
               <h5 class="card-title mb-4">Update Your Profile</h5>
-              <form method="POST" action="{{ url_for('account_settings') }}">
+              <form method="POST" action="{% url 'account_settings' %}">
+                {% csrf_token %}
                 <input type="hidden" name="action" value="update_profile">
                 
                 <div class="mb-3">
@@ -38,26 +39,26 @@
 
                 <div class="mb-3">
                   <label for="email" class="form-label">Email Address</label>
-                  <input type="email" class="form-control" id="email" name="email" value="{{ user.email or '' }}" required>
+                  <input type="email" class="form-control" id="email" name="email" value="{{ user.email|default:'' }}" required>
                   <small class="form-text text-muted">Your login email address</small>
                 </div>
 
                 <div class="mb-3">
                   <label for="phone" class="form-label">Phone Number</label>
-                  <input type="text" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                  <input type="text" class="form-control" id="phone" name="phone" value="{{ user.phone|default:'' }}">
                 </div>
 
                 <div class="mb-3">
                   <label for="home_address" class="form-label">Home Address</label>
-                  <textarea class="form-control" id="home_address" name="home_address" rows="3">{{ user.home_address or '' }}</textarea>
+                  <textarea class="form-control" id="home_address" name="home_address" rows="3">{{ user.home_address|default:'' }}</textarea>
                 </div>
 
                 {% if user.role == 'advisor' %}
                 <div class="alert alert-info" role="alert">
                   <strong>Advisor Information:</strong>
                   <ul class="mb-0 mt-2">
-                    <li>School: {{ user.school_name or 'Not set' }}</li>
-                    <li>Subjects: {{ user.subjects or 'Not set' }}</li>
+                    <li>School: {{ user.school_name|default:'Not set' }}</li>
+                    <li>Subjects: {{ user.subjects|default:'Not set' }}</li>
                   </ul>
                   <small class="text-muted d-block mt-2">Contact admin to modify advisor-specific information</small>
                 </div>
@@ -76,7 +77,8 @@
           <div class="card shadow-sm">
             <div class="card-body">
               <h5 class="card-title mb-4">Change Your Password</h5>
-              <form method="POST" action="{{ url_for('account_settings') }}">
+              <form method="POST" action="{% url 'account_settings' %}">
+                {% csrf_token %}
                 <input type="hidden" name="action" value="change_password">
                 
                 <div class="mb-3">
@@ -119,11 +121,11 @@
         <i class="bi bi-info-circle me-2"></i>
         <strong>Account Information:</strong>
         <ul class="mb-0 mt-2">
-          <li><strong>Role:</strong> <span class="badge bg-primary">{{ user.role | upper }}</span></li>
+          <li><strong>Role:</strong> <span class="badge bg-primary">{{ user.role|upper }}</span></li>
           <li><strong>Account Status:</strong> <span class="badge {% if user.approved %}bg-success{% elif user.rejected %}bg-danger{% else %}bg-warning{% endif %}">
             {% if user.approved %}Approved{% elif user.rejected %}Rejected{% else %}Pending Approval{% endif %}
           </span></li>
-          <li><strong>Username:</strong> {{ user.username or user.email }}</li>
+          <li><strong>Username:</strong> {% if user.username %}{{ user.username }}{% else %}{{ user.email }}{% endif %}</li>
         </ul>
       </div>
 

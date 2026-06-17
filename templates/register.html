@@ -6,6 +6,7 @@
       <div class="card-body">
         <h3 class="card-title mb-4 text-center">Register</h3>
         <form method="post" id="registration-form">
+          {% csrf_token %}
           <div class="mb-3">
             <label class="form-label">Select Role</label>
             <select class="form-select" id="rule" name="rule" required>
@@ -117,7 +118,7 @@
 
   ruleSelect.addEventListener('change', updateVisibleFields);
 
-  const initialRule = "{{ selected_role|default('') }}";
+  const initialRule = "{{ selected_role|default:"" }}";
   if (initialRule) {
     ruleSelect.value = initialRule;
     updateVisibleFields();
@@ -126,7 +127,7 @@
   registrationForm.addEventListener('submit', function (event) {
     if (ruleSelect.value === 'student') {
       event.preventDefault();
-      window.location.href = "{{ url_for('login') }}";
+      window.location.href = "{% url 'login' %}";
     }
   });
 </script>

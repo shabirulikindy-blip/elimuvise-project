@@ -5,34 +5,63 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-lg-7">
-        <span class="badge bg-light text-primary mb-3 fs-6">ElimuVise</span>
+        <span class="badge bg-light text-info mb-3 fs-6">ElimuVise</span>
         <h1 class="display-4 fw-bold mb-3">Empowering Education Through Smart Guidance</h1>
-        <p class="lead mb-4 opacity-75">A comprehensive academic dashboard connecting students, advisors, parents, and administrators for transparent, predictive, and collaborative education management.</p>
+        <p class="lead mb-4 opacity-75">ElimuVise is an AI based academic support platform designed to predict student performance and provide eary guidance to prevent academic risk.</p>
+        <p class="text-white-50 mb-4">Real-time learning insights, predictive performance alerts, and role-specific dashboards designed for modern schools and education teams. It act as smart"early warning system"to analyses a students data to flag if they are at "RISK" before final exams happen</p>
         <div class="d-flex flex-wrap gap-3">
-          <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4 py-2">
-            <i class="bi bi-person-plus me-2"></i>Get Started
-          </a>
-          <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4 py-2">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-          </a>
+          {% if user.is_authenticated %}
+            {% if user.role == 'advisor' %}
+              <a href="{% url 'advisor_portal' %}" class="btn btn-light btn-lg px-4 py-2">
+                <i class="bi bi-person-badge me-2"></i>Advisor Portal
+              </a>
+              <a href="{% url 'upload_results' %}" class="btn btn-outline-light btn-lg px-4 py-2">
+                <i class="bi bi-cloud-upload me-2"></i>Upload Results
+              </a>
+            {% elif user.role == 'parent' %}
+              <a href="{% url 'parent_portal' %}" class="btn btn-light btn-lg px-4 py-2">
+                <i class="bi bi-house-heart me-2"></i>Parent Portal
+              </a>
+            {% elif user.role == 'student' %}
+              <a href="{% url 'student_dashboard' %}" class="btn btn-light btn-lg px-4 py-2">
+                <i class="bi bi-mortarboard me-2"></i>Student Dashboard
+              </a>
+            {% elif user.role == 'admin' or user.is_staff %}
+              <a href="{% url 'admin_dashboard' %}" class="btn btn-light btn-lg px-4 py-2">
+                <i class="bi bi-speedometer2 me-2"></i>Admin Dashboard
+              </a>
+            {% else %}
+              <a href="{% url 'account_settings' %}" class="btn btn-light btn-lg px-4 py-2">
+                <i class="bi bi-gear me-2"></i>Account Settings
+              </a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 py-2">
+              <i class="bi bi-person-plus me-2"></i>Get Started
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4 py-2">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            </a>
+          {% endif %}
         </div>
       </div>
       <div class="col-lg-5 text-center mt-4 mt-lg-0">
         <div class="hero-card bg-white text-dark p-4 rounded-4 shadow-lg">
-          <i class="bi bi-shield-check display-4 text-primary mb-3"></i>
+          <span class="badge bg-info text-white mb-3">THE JOURNEY TO SUCCESS</span>
+          <i class="bi bi-shield-check display-4 text-info mb-3"></i>
           <h4 class="mb-3">Secure Role-Based Access</h4>
-          <p class="text-muted mb-4">Choose your position to register or sign in. All accounts require admin approval for enhanced security.</p>
+          <p class="text-muted mb-4">welcome to ElimuVISE to bring the gap between complex artificial intelligence and everyday schooling,ensuring that data turns into clear,actionable advice to help student succeed.</p>
           <div class="d-grid gap-2">
-            <a class="btn btn-outline-primary" href="{{ url_for('register', role='advisor') }}">
+            <a class="btn btn-outline-primary" href="{% url 'register' %}?role=advisor">
               <i class="bi bi-person-badge me-2"></i>Advisor
             </a>
-            <a class="btn btn-outline-primary" href="{{ url_for('register', role='parent') }}">
+            <a class="btn btn-outline-primary" href="{% url 'register' %}?role=parent">
               <i class="bi bi-house-heart me-2"></i>Parent
             </a>
-            <a class="btn btn-outline-primary" href="{{ url_for('login') }}">
+            <a class="btn btn-outline-primary" href="{% url 'login' %}">
               <i class="bi bi-mortarboard me-2"></i>Student
             </a>
-            <a class="btn btn-outline-primary" href="{{ url_for('login') }}">
+            <a class="btn btn-outline-primary" href="{% url 'login' %}">
               <i class="bi bi-gear me-2"></i>Admin
             </a>
           </div>
@@ -41,6 +70,58 @@
     </div>
   </div>
 </div>
+
+{% if dashboard_stats %}
+<div class="container mb-5">
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+        <div>
+          <h4 class="mb-2">Welcome back, {{ welcome_user }}</h4>
+          <p class="text-muted mb-0">{{ summary }}</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+          <span class="badge bg-light text-primary fs-6 py-2 px-3">{{ user_role|capfirst }}</span>
+        </div>
+      </div>
+      <div class="row gy-3 mt-4">
+        {% for stat in dashboard_stats %}
+        <div class="col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <p class="text-muted mb-2">{{ stat.label }}</p>
+              <h3 class="mb-1">{{ stat.value }}</h3>
+              <p class="small text-muted mb-0">{{ stat.detail }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if dashboard_actions %}
+      <div class="row gy-3 mt-4">
+        {% for action in dashboard_actions %}
+        <div class="col-md-6 col-xl-3">
+          <a href="{% url action.url_name %}" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <i class="bi {{ action.icon }} fs-1 text-primary me-3"></i>
+                  <div>
+                    <h5 class="mb-0">{{ action.title }}</h5>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">{{ action.description }}</p>
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <div class="container">
   <div class="row gy-4 mb-5">
@@ -82,7 +163,7 @@
             <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
             <div>
               <h6>Role-Based Security</h6>
-              <p class="text-muted small">Secure access with admin-approved registrations for all users.</p>
+              <p class="text-muted small">Secure access with admin-approved registrations for advisors, parents, students, and admins.</p>
             </div>
           </div>
         </div>
@@ -91,7 +172,7 @@
             <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
             <div>
               <h6>AI-Powered Insights</h6>
-              <p class="text-muted small">Predictive analytics for student performance and risk assessment.</p>
+              <p class="text-muted small">Rule-based prediction workflows built to surface academic risk and support early intervention.</p>
             </div>
           </div>
         </div>
@@ -100,7 +181,7 @@
             <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
             <div>
               <h6>Transparent Communication</h6>
-              <p class="text-muted small">Real-time alerts and notifications for parents and advisors.</p>
+              <p class="text-muted small">Real-time alerts and feedback loops keep students, advisors, and parents aligned.</p>
             </div>
           </div>
         </div>
@@ -109,7 +190,7 @@
             <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
             <div>
               <h6>PostgreSQL Backend</h6>
-              <p class="text-muted small">Production-ready database for scalable, secure data management.</p>
+              <p class="text-muted small">A robust PostgreSQL database ensures secure, scalable storage for student and school data.</p>
             </div>
           </div>
         </div>
@@ -122,10 +203,10 @@
           <h4 class="card-title">Get Started Today</h4>
           <p class="card-text opacity-75">Join the ElimuVise community and transform the way education is managed. Register your role and await admin approval to begin.</p>
           <div class="mt-4">
-            <a href="{{ url_for('register') }}" class="btn btn-light me-2">
+            <a href="{% url 'register' %}" class="btn btn-light me-2">
               <i class="bi bi-person-plus me-1"></i>Register
             </a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-light">
+            <a href="{% url 'login' %}" class="btn btn-outline-light">
               <i class="bi bi-box-arrow-in-right me-1"></i>Login
             </a>
           </div>

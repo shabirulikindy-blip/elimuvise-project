@@ -1,4 +1,16 @@
 {% extends 'base.html' %}
+{% block branding %}
+<div class="branding-hero">
+  <div class="brand-left">
+    <span class="badge-brand">ElimuVise</span>
+    <h1>Empowering Education Through Smart Guidance</h1>
+    <p>Manage your students effectively with real-time performance tracking, risk assessment, and targeted interventions.</p>
+  </div>
+  <div class="brand-right text-center">
+    <i class="bi bi-person-badge" style="font-size: 3.5rem; color: var(--accent-green); opacity: 0.3;"></i>
+  </div>
+</div>
+{% endblock %}
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -6,8 +18,8 @@
     <p class="text-muted">Quickly identify students who need urgent intervention.</p>
   </div>
   <div>
-    <a class="btn btn-outline-primary me-2" href="{{ url_for('register_student') }}">Register Student</a>
-    <a class="btn btn-primary" href="{{ url_for('upload_results') }}">Upload Results</a>
+    <a class="btn btn-outline-primary me-2" href="{% url 'register' %}?role=student">Register Student</a>
+    <a class="btn btn-primary" href="{% url 'upload_results' %}">Upload Results</a>
   </div>
 </div>
 <div class="row g-4 mb-4">
@@ -44,7 +56,7 @@
         {% if notifications %}
           <ul class="list-group list-group-flush">
             {% for note in notifications %}
-              <li class="list-group-item">{{ note.created_at.strftime('%b %d %H:%M') }} — {{ note.message }}</li>
+              <li class="list-group-item">{{ note.created_at|date:"M d H:i" }} — {{ note.message }}</li>
             {% endfor %}
           </ul>
         {% else %}
@@ -77,11 +89,19 @@
               <td>{{ student.form_level }}</td>
               <td>{{ student.combination }}</td>
               <td>{{ student.attendance_rate }}%</td>
-              <td><span class="badge bg-{{ 'danger' if student.prediction == 'At-Risk' else 'warning' if student.prediction == 'Average' else 'success' }}">{{ student.prediction }}</span></td>
               <td>
-                {% if student_assessments[student.id]['risk_level'] == 'high' %}
+                {% if student.prediction == 'At-Risk' %}
+                  <span class="badge bg-danger">{{ student.prediction }}</span>
+                {% elif student.prediction == 'Average' %}
+                  <span class="badge bg-warning">{{ student.prediction }}</span>
+                {% else %}
+                  <span class="badge bg-success">{{ student.prediction }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if student.assessment.risk_level == 'high' %}
                   <span class="badge bg-danger">High Risk</span>
-                {% elif student_assessments[student.id]['risk_level'] == 'medium' %}
+                {% elif student.assessment.risk_level == 'medium' %}
                   <span class="badge bg-warning">Medium Risk</span>
                 {% else %}
                   <span class="badge bg-success">Low Risk</span>
@@ -96,7 +116,8 @@
                     <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#assessmentModal{{ student.id }}">AI Assessment</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                      <form method="post" action="{{ url_for('send_alert', student_id=student.id) }}" class="dropdown-item-form">
+                      <form method="post" action="{% url 'advisor_send_alert' student.id %}" class="dropdown-item-form">
+                        {% csrf_token %}
                         <input type="hidden" name="message" value="Please schedule a meeting with your advisor to discuss academic support.">
                         <button type="submit" class="dropdown-item">Send Alert</button>
                       </form>
@@ -126,30 +147,34 @@
           <div class="col-md-6">
             <h6>Key Concerns</h6>
             <ul class="list-group list-group-flush">
-              {% for concern in student_assessments[student.id]['concerns'] %}
-                <li class="list-group-item text-danger">{{ concern }}</li>
+              {% if student.assessment.concerns %}
+                {% for concern in student.assessment.concerns %}
+                  <li class="list-group-item text-danger">{{ concern }}</li>
+                {% endfor %}
               {% else %}
                 <li class="list-group-item text-muted">No major concerns identified</li>
-              {% endfor %}
+              {% endif %}
             </ul>
           </div>
           <div class="col-md-6">
             <h6>Strengths</h6>
             <ul class="list-group list-group-flush">
-              {% for strength in student_assessments[student.id]['strengths'] %}
-                <li class="list-group-item text-success">{{ strength }}</li>
+              {% if student.assessment.strengths %}
+                {% for strength in student.assessment.strengths %}
+                  <li class="list-group-item text-success">{{ strength }}</li>
+                {% endfor %}
               {% else %}
                 <li class="list-group-item text-muted">Strengths to be determined after more data</li>
-              {% endfor %}
+              {% endif %}
             </ul>
           </div>
         </div>
-        
+
         <div class="mt-4">
           <h6>Recommended Interventions</h6>
           <div class="alert alert-info">
             <ul class="mb-0">
-              {% for intervention in student_assessments[student.id]['interventions'] %}
+              {% for intervention in student.assessment.interventions %}
                 <li>{{ intervention }}</li>
               {% endfor %}
             </ul>

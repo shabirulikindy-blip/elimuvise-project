@@ -107,7 +107,7 @@
                 <td>{{ result.subject }}</td>
                 <td><strong>{{ result.score }}</strong></td>
                 <td>{{ result.assessment_name }}</td>
-                <td>{{ result.created_at.strftime('%b %d, %Y') }}</td>
+                <td>{{ result.created_at|date:"M d, Y" }}</td>
               </tr>
               {% endfor %}
             </tbody>

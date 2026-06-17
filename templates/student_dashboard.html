@@ -1,4 +1,16 @@
 {% extends 'base.html' %}
+{% block branding %}
+<div class="branding-hero">
+  <div class="brand-left">
+    <span class="badge-brand">ElimuVise</span>
+    <h1>Empowering Education Through Smart Guidance</h1>
+    <p>Track your academic progress, receive personalized insights, and achieve your goals with AI-powered guidance.</p>
+  </div>
+  <div class="brand-right text-center">
+    <i class="bi bi-mortarboard" style="font-size: 3.5rem; color: var(--accent-green); opacity: 0.3;"></i>
+  </div>
+</div>
+{% endblock %}
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -35,10 +47,10 @@
         <div class="mb-3"><strong>Combination:</strong> {{ student.combination }}</div>
         <div class="mb-3"><strong>Attendance:</strong> {{ student.attendance_rate }}%</div>
         <div class="list-group">
-          {% for subject, score in subject_breakdown.items() %}
+          {% for subject, score in subject_breakdown.items %}
             <div class="list-group-item d-flex justify-content-between align-items-center">
               {{ subject }}
-              <span class="badge bg-secondary">{{ '%.1f' | format(score) }}</span>
+              <span class="badge bg-secondary">{{ score|floatformat:1 }}</span>
             </div>
           {% endfor %}
         </div>
@@ -49,7 +61,7 @@
         <h5 class="card-title">Recent Alerts</h5>
         <ul class="list-group list-group-flush">
           {% for alert in alerts %}
-            <li class="list-group-item small text-muted">{{ alert.created_at.strftime('%b %d, %Y') }} - {{ alert.message }}</li>
+            <li class="list-group-item small text-muted">{{ alert.created_at|date:"M d, Y" }} - {{ alert.message }}</li>
           {% else %}
             <li class="list-group-item">No alerts yet.</li>
           {% endfor %}
@@ -61,8 +73,8 @@
 {% endblock %}
 {% block scripts %}
 <script>
-const trendLabels = {{ results | map(attribute='assessment_name') | list | tojson }};
-const trendData = {{ results | map(attribute='score') | list | tojson }};
+const trendLabels = [{% for result in results %}"{{ result.assessment_name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+const trendData = [{% for result in results %}{{ result.score }}{% if not forloop.last %}, {% endif %}{% endfor %}];
 createLineChart('trendChart', trendLabels, trendData, 'Grade Trends');
 </script>
 {% endblock %}

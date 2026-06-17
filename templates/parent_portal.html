@@ -1,4 +1,16 @@
 {% extends 'base.html' %}
+{% block branding %}
+<div class="branding-hero">
+  <div class="brand-left">
+    <span class="badge-brand">ElimuVise</span>
+    <h1>Empowering Education Through Smart Guidance</h1>
+    <p>Stay connected with your child's academic journey. Monitor progress, receive alerts, and collaborate with advisors.</p>
+  </div>
+  <div class="brand-right text-center">
+    <i class="bi bi-house-heart" style="font-size: 3.5rem; color: var(--accent-green); opacity: 0.3;"></i>
+  </div>
+</div>
+{% endblock %}
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -34,7 +46,7 @@
         <ul class="list-group list-group-flush">
           {% for alert in alerts %}
             <li class="list-group-item">
-              <strong>{{ alert.created_at.strftime('%b %d') }}</strong> — {{ alert.message }}
+              <strong>{{ alert.created_at|date:"M d" }}</strong> — {{ alert.message }}
             </li>
           {% else %}
             <li class="list-group-item">No alerts at the moment.</li>
