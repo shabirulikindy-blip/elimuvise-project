@@ -60,7 +60,10 @@ class Command(BaseCommand):
             user=student_user,
             form_level='Form 4',
             combination='PCM',
+            study_hours_per_week=12.0,
             attendance_rate=94.5,
+            internet_access='Yes',
+            extracurricular='Yes',
             prediction='Low Risk',
             risk_level='low'
         )
@@ -97,6 +100,37 @@ class Command(BaseCommand):
             last_name='Doe'
         )
         self.stdout.write('OK: Seeded Parent: parent@example.com / parent123')
+
+        # 4b. Create Pending users for admin approval testing
+        User.objects.create_user(
+            username='pending_advisor@example.com',
+            email='pending_advisor@example.com',
+            password='advisor123',
+            role='advisor',
+            approved=False,
+            rejected=False,
+            first_name='Joseph',
+            last_name='Kamau',
+            school_name='Moshi Secondary School',
+            subjects='Chemistry, Biology',
+            phone='+255 754 999 888',
+            home_address='Moshi, Kilimanjaro'
+        )
+        self.stdout.write('OK: Seeded Pending Advisor: pending_advisor@example.com / advisor123')
+
+        User.objects.create_user(
+            username='pending_parent@example.com',
+            email='pending_parent@example.com',
+            password='parent123',
+            role='parent',
+            approved=False,
+            rejected=False,
+            first_name='Grace',
+            last_name='Mrema',
+            phone='+255 655 111 222',
+            home_address='Arusha'
+        )
+        self.stdout.write('OK: Seeded Pending Parent: pending_parent@example.com / parent123')
 
         # 5. Create some System logs & Notifications
         SystemLog.objects.create(

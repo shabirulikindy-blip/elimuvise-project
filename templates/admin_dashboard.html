@@ -15,214 +15,290 @@
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
     <h2>Admin Dashboard</h2>
-    <p class="text-muted">Institutional view for resource planning and system oversight.</p>
+    <p class="text-muted">Approval queue first. Everything else is below.</p>
   </div>
 </div>
-<div class="row mb-4">
-  <div class="col-md-12">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Search</h5>
-        <input type="text" id="searchInput" class="form-control" placeholder="Search schools, students, advisors, results...">
-      </div>
-    </div>
-  </div>
-</div>
+
 <div class="row g-4 mb-4">
   <div class="col-md-4">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0 bg-danger text-white">
       <div class="card-body">
-        <h5>Total Students</h5>
-        <h2>{{ total_students }}</h2>
+        <h5 class="mb-1">Pending Approvals</h5>
+        <h2 class="mb-0">{{ pending_count|default:0 }}</h2>
       </div>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
       <div class="card-body">
-        <h5>Total Advisors</h5>
-        <h2>{{ total_teachers }}</h2>
+        <h5 class="mb-1">Total Students</h5>
+        <h2 class="mb-0">{{ total_students }}</h2>
       </div>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
       <div class="card-body">
-        <h5>Risk Subjects</h5>
-        <p class="mb-0">Subjects with most uploaded results.</p>
+        <h5 class="mb-1">Total Advisors</h5>
+        <h2 class="mb-0">{{ total_teachers }}</h2>
       </div>
     </div>
   </div>
 </div>
-<div class="row g-4">
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Pending User Approvals</h5>
+
+<div class="card shadow-sm mb-4" id="pending-approvals">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h4 class="card-title mb-0">Approve New Users</h4>
+      <div class="d-flex align-items-center gap-2">
         {% if pending_users %}
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Role</th>
-                  <th>Name</th>
-                  <th>Email/Username</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody class="searchable-table" id="pendingUsersTable">
-                {% for user in pending_users %}
-                  <tr>
-                    <td><span class="badge bg-info">{{ user.role|upper }}</span></td>
-                    <td>{{ user.name }}</td>
-                    <td>{% if user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}</td>
-                    <td>
-                      <form method="post" action="{% url 'approve_user' user.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                      </form>
-                      <form method="post" action="{% url 'reject_user' user.id %}" class="d-inline ms-2">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger">Reject</button>
-                      </form>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <span class="badge bg-danger rounded-pill">{{ pending_count }} waiting</span>
+        {% endif %}
+        <form method="post" action="{% url 'approve_all_advisors' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-success" {% if pending_advisors_count == 0 %}disabled{% endif %}>
+            Approve All Advisors ({{ pending_advisors_count }})
+          </button>
+        </form>
+        <form method="post" action="{% url 'approve_all_parents' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-outline-success" {% if pending_parents_count == 0 %}disabled{% endif %}>
+            Approve All Parents ({{ pending_parents_count }})
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% if pending_users %}
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Name</th>
+              <th>Login</th>
+              <th>Submitted</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pendingUsersTable">
+            {% for user in pending_users %}
+              <tr class="user-row" data-user-id="{{ user.id }}">
+                <td>
+                  <span class="badge {% if user.role == 'advisor' %}bg-primary{% else %}bg-secondary{% endif %}">
+                    {{ user.role|upper }}
+                  </span>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ user.name|default:user.username }}</div>
+                  <div class="small text-muted">{{ user.phone|default:"No phone" }}</div>
+                </td>
+                <td>{% if user.email %}{{ user.email }}{% else %}{{ user.username }}{% endif %}</td>
+                <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
+                <td>
+                  <form method="post" action="{% url 'approve_user' user.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                  </form>
+                  <form method="post" action="{% url 'reject_user' user.id %}" class="d-inline ms-1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-success mb-0" role="alert">
+        No pending approvals. New requests will appear here immediately.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="accordion mb-4" id="adminDetailsAccordion">
+  <div class="accordion-item border-0 shadow-sm">
+    <h2 class="accordion-header" id="adminDetailsHeading">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#adminDetailsCollapse" aria-expanded="false" aria-controls="adminDetailsCollapse">
+        More Dashboard Details (logs, schools, advisors, students, results)
+      </button>
+    </h2>
+    <div id="adminDetailsCollapse" class="accordion-collapse collapse" aria-labelledby="adminDetailsHeading" data-bs-parent="#adminDetailsAccordion">
+      <div class="accordion-body">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Search</h5>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search logs, schools, students, advisors, results...">
+              </div>
+            </div>
           </div>
-        {% else %}
-          <p class="text-muted">No pending approvals.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Failed Login Attempts</h5>
-        <ul class="list-group list-group-flush searchable-list" id="failedLoginsList">
-          {% for event in failed_logins %}
-            <li class="list-group-item small text-muted">{{ event.timestamp|date:"M d H:i" }} — {{ event.description }}</li>
-          {% else %}
-            <li class="list-group-item">No failed login attempts yet.</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="row g-4 mt-4">
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">School List</h5>
-        {% if school_list %}
-          <ul class="list-group list-group-flush searchable-list" id="schoolsList">
-            {% for school in school_list %}
-              <li class="list-group-item">{{ school }}</li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="text-muted">No registered schools yet.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Advisor List</h5>
-        {% if teachers %}
-          <ul class="list-group list-group-flush searchable-list" id="advisorsList">
-            {% for teacher in teachers %}
-              <li class="list-group-item">
-                {{ teacher.name }} — {{ teacher.email }}
-                {% if not teacher.approved %}
-                  <span class="badge bg-warning text-dark ms-2">Pending</span>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Failed Login Attempts</h5>
+                <ul class="list-group list-group-flush searchable-list" id="failedLoginsList">
+                  {% for event in failed_logins %}
+                    <li class="list-group-item small text-muted">{{ event.timestamp|date:"M d H:i" }} — {{ event.description }}</li>
+                  {% empty %}
+                    <li class="list-group-item">No failed login attempts yet.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">School List</h5>
+                {% if school_list %}
+                  <ul class="list-group list-group-flush searchable-list" id="schoolsList">
+                    {% for school in school_list %}
+                      <li class="list-group-item">{{ school }}</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="text-muted">No registered schools yet.</p>
                 {% endif %}
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="text-muted">No advisors registered yet.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-<div class="row g-4 mt-4">
-  <div class="col-lg-12">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">System Logs</h5>
-        <ul class="list-group list-group-flush searchable-list" id="systemLogsList">
-          {% for log in logs %}
-            <li class="list-group-item small text-muted">{{ log.timestamp|date:"M d H:i" }} — {{ log.event_type }}: {{ log.description }}</li>
-          {% else %}
-            <li class="list-group-item">No log entries yet.</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="row g-4 mt-4">
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">All Students</h5>
-        {% if all_students %}
-          <ul class="list-group list-group-flush searchable-list" id="studentsList">
-            {% for student in all_students %}
-              <li class="list-group-item">
-                {{ student.name }} — {% if student.email %}{{ student.email }}{% else %}{{ student.username }}{% endif %}
-                {% if not student.approved %}
-                  <span class="badge bg-warning text-dark ms-2">Pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4">
+          <div class="col-lg-6">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Advisor List</h5>
+                {% if teachers %}
+                  <ul class="list-group list-group-flush searchable-list" id="advisorsList">
+                    {% for teacher in teachers %}
+                      <li class="list-group-item">
+                        {{ teacher.name }} — {{ teacher.email }}
+                        {% if not teacher.approved %}
+                          <span class="badge bg-warning text-dark ms-2">Pending</span>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="text-muted">No advisors registered yet.</p>
                 {% endif %}
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="text-muted">No students registered yet.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">All Results</h5>
-        {% if all_results %}
-          <ul class="list-group list-group-flush searchable-list" id="resultsList">
-            {% for result in all_results %}
-              <li class="list-group-item">
-                {{ result.student.user.name }} — {{ result.subject }}: {{ result.score }} ({{ result.assessment_name }})
-              </li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="text-muted">No results uploaded yet.</p>
-        {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">All Students</h5>
+                {% if all_students %}
+                  <ul class="list-group list-group-flush searchable-list" id="studentsList">
+                    {% for student in all_students %}
+                      <li class="list-group-item">
+                        {{ student.name }} — {% if student.email %}{{ student.email }}{% else %}{{ student.username }}{% endif %}
+                        {% if not student.approved %}
+                          <span class="badge bg-warning text-dark ms-2">Pending</span>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="text-muted">No students registered yet.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4">
+          <div class="col-lg-12">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">System Logs</h5>
+                <ul class="list-group list-group-flush searchable-list" id="systemLogsList">
+                  {% for log in logs %}
+                    <li class="list-group-item small text-muted">{{ log.timestamp|date:"M d H:i" }} — {{ log.event_type }}: {{ log.description }}</li>
+                  {% empty %}
+                    <li class="list-group-item">No log entries yet.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4">
+          <div class="col-lg-12">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">Latest Results</h5>
+                {% if all_results %}
+                  <ul class="list-group list-group-flush searchable-list" id="resultsList">
+                    {% for result in all_results %}
+                      <li class="list-group-item">
+                        {{ result.student.user.name }} — {{ result.subject }}: {{ result.score }} ({{ result.assessment_name }})
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <p class="text-muted">No results uploaded yet.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-document.getElementById('searchInput').addEventListener('input', function() {
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+searchInput.addEventListener('input', function() {
   const searchTerm = this.value.toLowerCase();
+  
   // Filter lists
   document.querySelectorAll('.searchable-list li').forEach(item => {
     const text = item.textContent.toLowerCase();
     item.style.display = text.includes(searchTerm) ? '' : 'none';
   });
-  // Filter table rows
+  
+  // Filter pending approvals table (main user rows + detail rows together)
+  const pendingRows = document.querySelectorAll('#pendingUsersTable tr.user-row');
+  pendingRows.forEach(mainRow => {
+    const userId = mainRow.getAttribute('data-user-id');
+    const detailRow = document.getElementById('details-row-' + userId);
+    
+    // Search within both main row and details content
+    const mainText = mainRow.textContent.toLowerCase();
+    const detailText = detailRow ? detailRow.textContent.toLowerCase() : '';
+    const combinedText = mainText + ' ' + detailText;
+    
+    if (combinedText.includes(searchTerm)) {
+      mainRow.style.display = '';
+      if (detailRow) detailRow.style.display = '';
+    } else {
+      mainRow.style.display = 'none';
+      if (detailRow) detailRow.style.display = 'none';
+    }
+  });
+
+  // Filter other tables (which might not have detail rows)
   document.querySelectorAll('.searchable-table tr').forEach(row => {
+    // Skip checking inside pending approvals table if it matches
+    if (row.closest('#pendingUsersTable')) return;
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(searchTerm) ? '' : 'none';
   });
 });
+}
 </script>
 
 {% endblock %}

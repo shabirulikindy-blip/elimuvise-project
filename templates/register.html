@@ -1,133 +1,393 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+  .role-card {
+    border: 2px solid rgba(148, 163, 184, 0.15);
+    border-radius: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--surface-strong);
+    position: relative;
+    overflow: hidden;
+  }
+  .role-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-blue);
+    box-shadow: 0 12px 24px rgba(0, 119, 190, 0.08);
+  }
+  .role-card.active {
+    border-color: var(--accent-green);
+    background: var(--surface-stronger);
+    box-shadow: 0 12px 24px rgba(26, 167, 75, 0.08);
+  }
+  .role-card .role-icon {
+    font-size: 2.5rem;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+  }
+  .role-card.active .role-icon {
+    color: var(--accent-green);
+  }
+  .role-card .check-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--accent-green);
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .role-card.active .check-badge {
+    opacity: 1;
+  }
+  .form-section-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: 2px solid rgba(26, 167, 75, 0.15);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .input-group-text {
+    background-color: rgba(91, 125, 247, 0.04);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: var(--text-secondary);
+    border-radius: 1rem 0 0 1rem !important;
+  }
+  .form-control-with-icon {
+    border-radius: 0 1rem 1rem 0 !important;
+  }
+  .password-toggle {
+    cursor: pointer;
+    background: transparent;
+    border-left: none;
+    border-radius: 0 1rem 1rem 0 !important;
+  }
+  .form-control-password {
+    border-right: none;
+    border-radius: 0 !important;
+  }
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(148, 163, 184, 0.3);
+    transition: background 0.3s;
+  }
+  .step-dot.active {
+    background: var(--accent-green);
+    width: 24px;
+    border-radius: 6px;
+  }
+</style>
+
 <div class="row justify-content-center">
-  <div class="col-lg-10">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title mb-4 text-center">Register</h3>
-        <form method="post" id="registration-form">
+  <div class="col-lg-8 col-md-10">
+    <div class="card shadow-lg border-0">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <h2 class="fw-extrabold text-primary">Join ElimuVISE</h2>
+          <p class="text-muted">Empowering schools, parents, and students with AI predictive analytics</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+          <div class="step-dot active" id="dot-1"></div>
+          <div class="step-dot" id="dot-2"></div>
+        </div>
+
+        <form method="post" id="registration-form" class="needs-validation" novalidate>
           {% csrf_token %}
-          <div class="mb-3">
-            <label class="form-label">Select Role</label>
-            <select class="form-select" id="rule" name="rule" required>
-              <option value="" {% if selected_role == '' %}selected{% endif %}>Choose role</option>
-              <option value="advisor" {% if selected_role == 'advisor' %}selected{% endif %}>Advisor</option>
-              <option value="parent" {% if selected_role == 'parent' %}selected{% endif %}>Parent</option>
-              <option value="student" {% if selected_role == 'student' %}selected{% endif %}>Student</option>
-            </select>
-          </div>
+          
+          <!-- Hidden role field -->
+          <input type="hidden" name="rule" id="rule-input" value="{{ selected_role|default:"" }}">
 
-          <div id="advisor-fields" style="display:none;">
-            <div class="row gy-3">
-              <div class="col-md-6">
-                <label class="form-label">Full Name</label>
-                <input class="form-control" name="name" type="text">
+          <!-- STEP 1: Select Role -->
+          <div id="step-1-content">
+            <h5 class="mb-4 text-center fw-bold">Select your role to get started:</h5>
+            <div class="row g-3 justify-content-center">
+              
+              <!-- Advisor Card -->
+              <div class="col-sm-4">
+                <div class="role-card p-4 text-center {% if selected_role == 'advisor' %}active{% endif %}" onclick="selectRole('advisor')">
+                  <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                  <div class="role-icon mb-3"><i class="bi bi-mortarboard"></i></div>
+                  <h6 class="fw-bold mb-1">Academic Advisor</h6>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">Manage academic data & guide students</small>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" type="email">
+
+              <!-- Parent Card -->
+              <div class="col-sm-4">
+                <div class="role-card p-4 text-center {% if selected_role == 'parent' %}active{% endif %}" onclick="selectRole('parent')">
+                  <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                  <div class="role-icon mb-3"><i class="bi bi-people"></i></div>
+                  <h6 class="fw-bold mb-1">Parent / Guardian</h6>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">Monitor student progress & get alerts</small>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Password</label>
-                <input class="form-control" name="password" type="password">
+
+              <!-- Student Card -->
+              <div class="col-sm-4">
+                <div class="role-card p-4 text-center {% if selected_role == 'student' %}active{% endif %}" onclick="selectRole('student')">
+                  <div class="check-badge"><i class="bi bi-check-lg"></i></div>
+                  <div class="role-icon mb-3"><i class="bi bi-person-badge"></i></div>
+                  <h6 class="fw-bold mb-1">Student</h6>
+                  <small class="text-muted d-block" style="font-size: 0.75rem;">View performance & advisory insights</small>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">School Name</label>
-                <input class="form-control" name="school_name" type="text">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Subjects</label>
-                <input class="form-control" name="subjects" placeholder="e.g., Math, Science" type="text">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Phone Number</label>
-                <input class="form-control" name="phone" type="text">
-              </div>
-              <div class="col-md-12">
-                <label class="form-label">Home Address</label>
-                <textarea class="form-control" name="home_address" rows="3"></textarea>
-              </div>
+
+            </div>
+
+            <!-- Student Note -->
+            <div id="student-warning" class="alert alert-info mt-4 d-none text-center shadow-sm">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              <strong>Student accounts are registered by Advisors.</strong><br>
+              Please contact your school academic advisor for credentials to log in.
+            </div>
+
+            <div class="mt-4 text-end" id="btn-next-container">
+              <button class="btn btn-primary px-4 py-2" type="button" id="btn-next" onclick="goToStep2()" disabled>
+                Next Step <i class="bi bi-arrow-right ms-1"></i>
+              </button>
             </div>
           </div>
 
-          <div id="parent-fields" style="display:none;">
-            <div class="row gy-3">
-              <div class="col-md-6">
-                <label class="form-label">Full Name</label>
-                <input class="form-control" name="name" type="text">
+          <!-- STEP 2: Detail Form -->
+          <div id="step-2-content" class="d-none">
+            <h5 class="form-section-title" id="form-title">Account Information</h5>
+
+            <!-- Advisor Specific Form Fields -->
+            <div id="advisor-fields" class="d-none">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input class="form-control form-control-with-icon" name="name" type="text" placeholder="e.g. Sarah Mrema">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Email Address</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input class="form-control form-control-with-icon" name="email" type="email" placeholder="name@school.com">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Password</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input class="form-control form-control-password" name="password" type="password" placeholder="••••••••" minlength="6">
+                    <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePassword(this)"><i class="bi bi-eye"></i></button>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">School Name</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                    <input class="form-control form-control-with-icon" name="school_name" type="text" placeholder="e.g. Elimu Secondary School">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Teaching Subjects</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-book"></i></span>
+                    <input class="form-control form-control-with-icon" name="subjects" placeholder="e.g. Physics, Mathematics" type="text">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                    <input class="form-control form-control-with-icon" name="phone" type="text" placeholder="e.g. +255 712 345 678">
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Home Address</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                    <textarea class="form-control form-control-with-icon" name="home_address" rows="3" placeholder="Enter your residential address"></textarea>
+                  </div>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input class="form-control" name="email" type="email">
+            </div>
+
+            <!-- Parent Specific Form Fields -->
+            <div id="parent-fields" class="d-none">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input class="form-control form-control-with-icon" name="name" type="text" placeholder="e.g. Jane Doe">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Email Address</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input class="form-control form-control-with-icon" name="email" type="email" placeholder="jane.doe@gmail.com">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                    <input class="form-control form-control-with-icon" name="phone" type="text" placeholder="e.g. +255 712 345 678">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Password</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input class="form-control form-control-password" name="password" type="password" placeholder="••••••••" minlength="6">
+                    <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePassword(this)"><i class="bi bi-eye"></i></button>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Home Address</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                    <textarea class="form-control form-control-with-icon" name="home_address" rows="3" placeholder="Enter your home address"></textarea>
+                  </div>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Phone Number</label>
-                <input class="form-control" name="phone" type="text">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Password</label>
-                <input class="form-control" name="password" type="password">
-              </div>
-              <div class="col-md-12">
-                <label class="form-label">Home Address</label>
-                <textarea class="form-control" name="home_address" rows="3"></textarea>
-              </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="mt-4 d-flex justify-content-between">
+              <button class="btn btn-outline-secondary px-4 py-2" type="button" onclick="goToStep1()">
+                <i class="bi bi-arrow-left me-1"></i> Back
+              </button>
+              <button class="btn btn-primary px-4 py-2" type="submit">
+                Submit Registration <i class="bi bi-check-circle ms-1"></i>
+              </button>
             </div>
           </div>
 
-          <div id="student-message" class="alert alert-info" style="display:none;">
-            Students must be registered by an advisor. Please ask your advisor for a username and password and then log in on the login page.
-          </div>
-
-          <div class="mt-4">
-            <button class="btn btn-primary" type="submit">Continue</button>
-          </div>
         </form>
+
+        <div class="mt-4 text-center">
+          <p class="text-muted mb-0">Already have an account? <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">Sign in here</a></p>
+        </div>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script>
-  const ruleSelect = document.getElementById('rule');
+  const ruleInput = document.getElementById('rule-input');
+  const studentWarning = document.getElementById('student-warning');
+  const btnNext = document.getElementById('btn-next');
+  
+  const step1Content = document.getElementById('step-1-content');
+  const step2Content = document.getElementById('step-2-content');
+  const dot1 = document.getElementById('dot-1');
+  const dot2 = document.getElementById('dot-2');
+  
+  const formTitle = document.getElementById('form-title');
   const advisorFields = document.getElementById('advisor-fields');
   const parentFields = document.getElementById('parent-fields');
-  const studentMessage = document.getElementById('student-message');
   const registrationForm = document.getElementById('registration-form');
 
-  function updateVisibleFields() {
-    advisorFields.style.display = ruleSelect.value === 'advisor' ? 'block' : 'none';
-    parentFields.style.display = ruleSelect.value === 'parent' ? 'block' : 'none';
-    studentMessage.style.display = ruleSelect.value === 'student' ? 'block' : 'none';
-
-    if (ruleSelect.value === 'student') {
-      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = false);
-      parentFields.querySelectorAll('input').forEach(i => i.required = false);
-    } else if (ruleSelect.value === 'advisor') {
-      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = true);
-      parentFields.querySelectorAll('input').forEach(i => i.required = false);
-    } else if (ruleSelect.value === 'parent') {
-      parentFields.querySelectorAll('input').forEach(i => i.required = true);
-      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = false);
+  function selectRole(role) {
+    // Set active class
+    document.querySelectorAll('.role-card').forEach(card => {
+      card.classList.remove('active');
+    });
+    
+    // Find clicked card
+    const idx = role === 'advisor' ? 0 : role === 'parent' ? 1 : 2;
+    document.querySelectorAll('.role-card')[idx].classList.add('active');
+    
+    ruleInput.value = role;
+    
+    if (role === 'student') {
+      studentWarning.classList.remove('d-none');
+      btnNext.disabled = true;
     } else {
-      advisorFields.querySelectorAll('input, textarea').forEach(i => i.required = false);
-      parentFields.querySelectorAll('input').forEach(i => i.required = false);
+      studentWarning.classList.add('d-none');
+      btnNext.disabled = false;
     }
   }
 
-  ruleSelect.addEventListener('change', updateVisibleFields);
+  function goToStep2() {
+    const role = ruleInput.value;
+    if (!role || role === 'student') return;
 
-  const initialRule = "{{ selected_role|default:"" }}";
-  if (initialRule) {
-    ruleSelect.value = initialRule;
-    updateVisibleFields();
+    step1Content.classList.add('d-none');
+    step2Content.classList.remove('d-none');
+    dot1.classList.remove('active');
+    dot2.classList.add('active');
+
+    if (role === 'advisor') {
+      formTitle.innerText = "Advisor Profile Registration";
+      advisorFields.classList.remove('d-none');
+      parentFields.classList.add('d-none');
+      
+      // Enable & require advisor fields
+      toggleFields(advisorFields, true);
+      toggleFields(parentFields, false);
+    } else if (role === 'parent') {
+      formTitle.innerText = "Parent Profile Registration";
+      parentFields.classList.remove('d-none');
+      advisorFields.classList.add('d-none');
+      
+      // Enable & require parent fields
+      toggleFields(parentFields, true);
+      toggleFields(advisorFields, false);
+    }
   }
 
-  registrationForm.addEventListener('submit', function (event) {
-    if (ruleSelect.value === 'student') {
-      event.preventDefault();
-      window.location.href = "{% url 'login' %}";
+  function goToStep1() {
+    step2Content.classList.add('d-none');
+    step1Content.classList.remove('d-none');
+    dot2.classList.remove('active');
+    dot1.classList.add('active');
+  }
+
+  function toggleFields(container, enable) {
+    container.querySelectorAll('input, textarea').forEach(field => {
+      field.disabled = !enable;
+      field.required = enable;
+    });
+  }
+
+  function togglePassword(btn) {
+    const input = btn.previousElementSibling;
+    const icon = btn.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      input.type = "password";
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  }
+
+  // Handle initialization if role is preselected via URL
+  window.addEventListener('DOMContentLoaded', () => {
+    const initialRole = ruleInput.value;
+    if (initialRole) {
+      selectRole(initialRole);
+      if (initialRole !== 'student') {
+        goToStep2();
+      }
     }
   });
 </script>

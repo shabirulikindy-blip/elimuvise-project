@@ -22,24 +22,26 @@
             <p class="text-muted mb-3">Upload a CSV file to add multiple student results at once. AI predictions will be updated automatically.</p>
             
             <form method="post" enctype="multipart/form-data" id="csvForm">
+              {% csrf_token %}
               <input type="hidden" name="upload_type" value="csv">
               <div class="mb-3">
                 <label class="form-label">CSV File</label>
                 <input class="form-control" type="file" name="csv_file" accept=".csv" required>
-                <small class="form-text text-muted">Required columns: <code>student_id</code>, <code>subject</code>, <code>score</code>, <code>assessment_name</code></small>
+                <small class="form-text text-muted">Required: <code>student_id</code> plus the five factors <code>study_hours_per_week</code>, <code>attendance_rate</code>, <code>internet_access</code>, <code>extracurricular</code>, <code>previous_score</code>.</small>
               </div>
               <div class="mb-3">
                 <button class="btn btn-primary" type="submit">Upload CSV</button>
+                <button class="btn btn-outline-secondary ms-2" type="button" onclick="downloadCsvTemplate()">Download CSV Template</button>
               </div>
             </form>
 
             <div class="alert alert-info mt-4">
               <h6>CSV Format Example:</h6>
-              <pre><code>student_id,subject,score,assessment_name
-1,Mathematics,85,Assessment 1
-1,Physics,78,Assessment 1
-2,Chemistry,92,Assessment 1
-2,Biology,88,Assessment 1</code></pre>
+              <pre><code>student_id,study_hours_per_week,attendance_rate,internet_access,extracurricular,previous_score
+1,12,94,Yes,Yes,85
+1,10,91,Yes,No,78
+2,8,88,Yes,No,72
+2,6,81,No,No,60</code></pre>
             </div>
           </div>
         </div>
@@ -51,6 +53,7 @@
           <div class="card-body">
             <h4 class="card-title mb-3">Add Single Result</h4>
             <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
               <input type="hidden" name="upload_type" value="manual">
               <div class="row gy-3">
                 <div class="col-md-6">
@@ -73,6 +76,30 @@
                 <div class="col-md-6">
                   <label class="form-label">Assessment Name</label>
                   <input class="form-control" name="assessment_name" placeholder="e.g., Assessment 1" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Study Hours Per Week</label>
+                  <input class="form-control" name="study_hours_per_week" type="number" min="0" step="0.5" placeholder="e.g., 10" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Attendance Rate (%)</label>
+                  <input class="form-control" name="attendance_rate" type="number" min="0" max="100" step="0.1" placeholder="e.g., 92.5" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Internet Access</label>
+                  <select class="form-select" name="internet_access" required>
+                    <option value="">Select...</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Extracurricular Participation</label>
+                  <select class="form-select" name="extracurricular" required>
+                    <option value="">Select...</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
                 </div>
               </div>
               <div class="mt-4">
@@ -127,5 +154,24 @@ document.getElementById('csvForm').addEventListener('submit', function(e) {
     alert('Please select a CSV file');
   }
 });
+
+function downloadCsvTemplate() {
+  const csvContent = [
+    'student_id,study_hours_per_week,attendance_rate,internet_access,extracurricular,previous_score',
+    '1,12,94,Yes,Yes,85',
+    '1,10,91,Yes,No,78',
+    '2,8,88,Yes,No,72'
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'elimuvise_results_template.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 </script>
 {% endblock %}

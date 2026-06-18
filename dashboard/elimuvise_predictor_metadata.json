@@ -1,0 +1,41 @@
+{
+  "model_type": "CatBoostClassifier",
+  "target_column": "passed",
+  "feature_columns": [
+    "gender",
+    "age",
+    "study_hours_per_week",
+    "attendance_rate",
+    "parent_education",
+    "internet_access",
+    "extracurricular",
+    "previous_score"
+  ],
+  "categorical_columns": [
+    "gender",
+    "parent_education",
+    "internet_access",
+    "extracurricular"
+  ],
+  "feature_defaults": {
+    "gender": "Female",
+    "age": 17.0,
+    "study_hours_per_week": 15.0,
+    "attendance_rate": 76.5,
+    "parent_education": "Unknown",
+    "internet_access": "Yes",
+    "extracurricular": "No",
+    "previous_score": 64.0
+  },
+  "positive_label": "passed",
+  "negative_label": "failed",
+  "probability_threshold": 0.5,
+  "metrics": {
+    "validation_accuracy": 0.87,
+    "validation_auc": 0.9512,
+    "validation_f1": 0.8926,
+    "train_rows": 399,
+    "validation_rows": 100,
+    "best_iteration": 29
+  }
+}

@@ -10,6 +10,32 @@ A Django-based academic dashboard prototype for students, advisors, parents, and
 - Role-based login and secure hashed credentials.
 - AI advisory engine using rule-based predictions with a Random Forest design scaffold.
 
+## CatBoost Model Training and Integration
+The project includes a CatBoost pipeline for pass/fail prediction based on historical student records.
+
+1. Train and export model artifacts:
+   ```bash
+   cd model-training
+   python train.py
+   ```
+
+2. Validate the saved model:
+   ```bash
+   cd model-training
+   python test_prediction.py
+   ```
+
+3. Generated artifacts used by Django:
+   - `dashboard/elimuvise_predictor.cbm`
+   - `dashboard/elimuvise_predictor_metadata.json`
+
+4. Integration entry point in Django:
+   - `dashboard/prediction_service.py`
+   - Use `predict_student_outcome(features)` with a feature payload containing:
+     `gender`, `age`, `study_hours_per_week`, `attendance_rate`, `parent_education`, `internet_access`, `extracurricular`, `previous_score`.
+
+The metadata file stores the exact feature order and threshold used during training so production prediction stays consistent with training.
+
 ## Run locally
 1. Create a Python environment:
    ```bash

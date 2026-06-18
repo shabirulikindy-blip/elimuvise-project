@@ -13,6 +13,7 @@ class User(AbstractUser):
     approved = models.BooleanField(default=False)
     rejected = models.BooleanField(default=False)
     registration_rule = models.CharField(max_length=120, blank=True, null=True)
+    can_approve_users = models.BooleanField(default=False)
 
     @property
     def name(self):
@@ -29,7 +30,10 @@ class Student(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
     form_level = models.CharField(max_length=10)
     combination = models.CharField(max_length=20)
+    study_hours_per_week = models.FloatField(default=0.0)
     attendance_rate = models.FloatField(default=0.0)
+    internet_access = models.CharField(max_length=10, default='Unknown')
+    extracurricular = models.CharField(max_length=10, default='No')
     prediction = models.CharField(max_length=20, default='Average')
     risk_level = models.CharField(max_length=10, default='average')
 
