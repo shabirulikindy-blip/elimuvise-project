@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
@@ -5,12 +6,44 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from django.utils import timezone
+from datetime import timedelta
+from functools import wraps
 
 from .models import Alert, Notification, Result, Student, SystemLog
 
 User = get_user_model()
 
 _admin_checked = False
+
+
+def admin_session_required(view_func):
+    """
+    Decorator to enforce session timeout and admin-only access for dashboard views.
+    """
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('login')
+
+        if not (request.user.role == 'admin' or request.user.is_staff):
+            messages.error(request, 'Admin dashboard access is limited to admin accounts only.')
+            return redirect('index')
+
+        timeout_duration = timedelta(seconds=getattr(settings, 'ADMIN_SESSION_TIMEOUT', 60))
+        last_activity = request.session.get('last_admin_activity')
+        if last_activity:
+            last_activity_time = timezone.datetime.fromisoformat(last_activity)
+            if timezone.now() - last_activity_time > timeout_duration:
+                auth_logout(request)
+                messages.warning(request, 'Your admin session has expired. Please log in again.')
+                return redirect('login')
+
+        request.session['last_admin_activity'] = timezone.now().isoformat()
+        request.session.modified = True
+        return view_func(request, *args, **kwargs)
+
+    return wrapped_view
 
 
 def ensure_admin_exists():
@@ -297,7 +330,7 @@ def send_alert(request, student_id):
     return redirect('advisor_portal')
 
 
-@login_required
+@admin_session_required
 def admin_dashboard(request):
     pending_users = User.objects.filter(approved=False, rejected=False)
     failed_logins = SystemLog.objects.filter(event_type='failed_login').order_by('-timestamp')[:10]
@@ -317,7 +350,7 @@ def admin_dashboard(request):
     })
 
 
-@login_required
+@admin_session_required
 @require_POST
 def approve_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -328,7 +361,7 @@ def approve_user(request, user_id):
     return redirect('admin_dashboard')
 
 
-@login_required
+@admin_session_required
 @require_POST
 def reject_user(request, user_id):
     user = get_object_or_404(User, id=user_id)

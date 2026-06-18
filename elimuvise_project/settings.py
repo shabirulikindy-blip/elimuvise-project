@@ -90,3 +90,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'dashboard.User'
 LOGIN_URL = 'login'
+
+# Session Timeout Configuration
+# Admin session expires after 1 minute (60 seconds) of inactivity
+SESSION_COOKIE_AGE = 60  # 1 minute for admin
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True  # Reset timeout on every request
+ADMIN_SESSION_TIMEOUT = 60  # 1 minute timeout for admin dashboard
