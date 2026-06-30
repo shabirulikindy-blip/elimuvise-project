@@ -68,4 +68,5 @@ Write-Host ""
 Write-Host "Press Ctrl+C to stop the server"
 Write-Host ""
 
+Start-Process "http://127.0.0.1:8000/"
 Start-Process -FilePath $venvPythonPath -ArgumentList 'manage.py','runserver' -NoNewWindow

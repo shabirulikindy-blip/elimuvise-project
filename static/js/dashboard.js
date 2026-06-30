@@ -8,11 +8,12 @@ function createLineChart(canvasId, labels, data, label) {
       datasets: [{
         label: label,
         data: data,
-        borderColor: '#0d6efd',
-        backgroundColor: 'rgba(13, 110, 253, 0.15)',
+        borderColor: '#00ff88',
+        backgroundColor: 'rgba(0, 255, 136, 0.12)',
         tension: 0.3,
         fill: true,
-        pointRadius: 4,
+        pointRadius: 5,
+        pointBackgroundColor: '#00ff88',
       }],
     },
     options: {
@@ -24,7 +25,23 @@ function createLineChart(canvasId, labels, data, label) {
         y: {
           beginAtZero: true,
           max: 100,
+          grid: {
+            color: 'rgba(255, 255, 255, 0.08)',
+          },
+          ticks: {
+            color: '#a5b4fc',
+            font: { weight: 'bold' },
+          }
         },
+        x: {
+          grid: {
+            color: 'rgba(255, 255, 255, 0.08)',
+          },
+          ticks: {
+            color: '#a5b4fc',
+            font: { weight: 'bold' },
+          }
+        }
       },
     },
   });
@@ -40,7 +57,7 @@ function createBarChart(canvasId, labels, data, label) {
       datasets: [{
         label: label,
         data: data,
-        backgroundColor: ['#0d6efd', '#198754'],
+        backgroundColor: ['#00bcd4', '#00ff88'],
       }],
     },
     options: {
@@ -52,7 +69,23 @@ function createBarChart(canvasId, labels, data, label) {
         y: {
           beginAtZero: true,
           max: 100,
+          grid: {
+            color: 'rgba(255, 255, 255, 0.08)',
+          },
+          ticks: {
+            color: '#a5b4fc',
+            font: { weight: 'bold' },
+          }
         },
+        x: {
+          grid: {
+            color: 'rgba(255, 255, 255, 0.08)',
+          },
+          ticks: {
+            color: '#a5b4fc',
+            font: { weight: 'bold' },
+          }
+        }
       },
     },
   });

@@ -1,52 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-  .role-card {
-    border: 2px solid rgba(148, 163, 184, 0.15);
-    border-radius: 1.2rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: var(--surface-strong);
-    position: relative;
-    overflow: hidden;
-  }
-  .role-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--accent-blue);
-    box-shadow: 0 12px 24px rgba(0, 119, 190, 0.08);
-  }
-  .role-card.active {
-    border-color: var(--accent-green);
-    background: var(--surface-stronger);
-    box-shadow: 0 12px 24px rgba(26, 167, 75, 0.08);
-  }
-  .role-card .role-icon {
-    font-size: 2.5rem;
-    color: var(--text-secondary);
-    transition: color 0.3s;
-  }
-  .role-card.active .role-icon {
-    color: var(--accent-green);
-  }
-  .role-card .check-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: var(--accent-green);
-    color: #fff;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .role-card.active .check-badge {
-    opacity: 1;
-  }
   .form-section-title {
     font-weight: 700;
     color: var(--text-primary);
@@ -72,24 +26,6 @@
   .form-control-password {
     border-right: none;
     border-radius: 0 !important;
-  }
-  .step-indicator {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  .step-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: rgba(148, 163, 184, 0.3);
-    transition: background 0.3s;
-  }
-  .step-dot.active {
-    background: var(--accent-green);
-    width: 24px;
-    border-radius: 6px;
   }
 </style>
 
@@ -257,6 +193,19 @@
                     <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePassword(this)"><i class="bi bi-eye"></i></button>
                   </div>
                 </div>
+                <div class="col-md-6">
+                  <label class="form-label">School Name</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-building"></i></span>
+                    <select class="form-select form-control-with-icon" name="school_name" required style="border-radius: 0 1rem 1rem 0 !important; background-color: var(--bg-dark); color: #fff;">
+                      <option value="" style="background-color: #121824;">-- Select Child's School --</option>
+                      {% for school in schools %}
+                        <option value="{{ school.name }}" style="background-color: #121824;">{{ school.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+
                 <div class="col-12">
                   <label class="form-label">Home Address</label>
                   <div class="input-group">
@@ -266,6 +215,7 @@
                 </div>
               </div>
             </div>
+
 
             <!-- Navigation Buttons -->
             <div class="mt-4 d-flex justify-content-between">

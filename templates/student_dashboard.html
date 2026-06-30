@@ -27,18 +27,55 @@
         <canvas id="trendChart" height="220"></canvas>
       </div>
     </div>
-    <div class="card shadow-sm mt-4">
-      <div class="card-body">
-        <h5 class="card-title">AI-Powered Study Tips</h5>
-        <div class="alert alert-primary">
-          <ul class="mb-0">
-            {% for tip in study_tips %}
-              <li class="mb-2">{{ tip }}</li>
-            {% endfor %}
-          </ul>
+    <div class="card shadow-sm mt-4 border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem;">
+      <div class="card-body p-4">
+        <h5 class="card-title mb-3 text-white"><i class="bi bi-shield-check text-success me-2"></i>Personalised Advisory Plan</h5>
+        
+        <!-- Risk Alert Notice -->
+        <div class="alert alert-{% if badge_class == 'danger' %}danger{% elif badge_class == 'warning' %}warning{% else %}success{% endif %} d-flex align-items-center mb-4" role="alert">
+          <i class="bi {% if badge_class == 'danger' %}bi-exclamation-triangle-fill{% elif badge_class == 'warning' %}bi-exclamation-circle-fill{% else %}bi-check-circle-fill{% endif %} fs-4 me-3"></i>
+          <div>
+            {{ student_advisory.risk_alert }}
+          </div>
         </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="text-white mb-2"><i class="bi bi-book-half text-info me-2"></i>Study Reminders</h6>
+            <div class="list-group list-group-flush">
+              {% for tip in student_advisory.study_reminders %}
+                <div class="list-group-item bg-transparent text-white-50 border-0 ps-0 small">
+                  <i class="bi bi-dot text-info me-2 fs-5"></i>{{ tip }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-white mb-2"><i class="bi bi-list-task text-warning me-2"></i>Weekly Action Plan</h6>
+            <div class="list-group list-group-flush">
+              {% for action in student_advisory.weekly_actions %}
+                <div class="list-group-item bg-transparent text-white-50 border-0 ps-0 small">
+                  <i class="bi bi-bookmark-check-fill text-warning me-2"></i>{{ action }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Advisor Checkin Notice -->
+        <div class="mt-4 p-3 rounded" style="background: rgba(0, 188, 212, 0.08); border-left: 4px solid #00bcd4;">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <strong class="text-white d-block mb-1">Advisor Check-In Recommendation:</strong>
+              <p class="text-white-50 mb-0 small">{{ student_advisory.advisor_recommendation }}</p>
+            </div>
+            <i class="bi bi-chat-left-text text-info fs-3"></i>
+          </div>
+        </div>
+
       </div>
     </div>
+
   </div>
   <div class="col-lg-4">
     <div class="card shadow-sm">
@@ -62,7 +99,7 @@
         <ul class="list-group list-group-flush">
           {% for alert in alerts %}
             <li class="list-group-item small text-muted">{{ alert.created_at|date:"M d, Y" }} - {{ alert.message }}</li>
-          {% else %}
+          {% empty %}
             <li class="list-group-item">No alerts yet.</li>
           {% endfor %}
         </ul>
@@ -73,8 +110,8 @@
 {% endblock %}
 {% block scripts %}
 <script>
-const trendLabels = [{% for result in results %}"{{ result.assessment_name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
-const trendData = [{% for result in results %}{{ result.score }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const trendLabels = [{% for result in trend_results %}"{{ result.assessment_name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+const trendData = [{% for result in trend_results %}{{ result.score }}{% if not forloop.last %}, {% endif %}{% endfor %}];
 createLineChart('trendChart', trendLabels, trendData, 'Grade Trends');
 </script>
 {% endblock %}

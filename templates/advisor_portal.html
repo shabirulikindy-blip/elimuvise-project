@@ -11,6 +11,7 @@
   </div>
 </div>
 {% endblock %}
+
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-4">
   <div>
@@ -18,8 +19,13 @@
     <p class="text-muted">Quickly identify students who need urgent intervention.</p>
   </div>
   <div>
+    {% if request.user.role == 'advisor' %}
+    <a class="btn btn-info me-2" href="{% url 'advisor_school_records' %}">
+      <i class="bi bi-robot me-1"></i> School Records & AI
+    </a>
+    {% endif %}
     <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#registerStudentModal">Register Student</button>
-    <a class="btn btn-primary" href="{% url 'upload_results' %}">Upload Results</a>
+    {% if request.user.role == 'advisor' and not request.user.advisor_profile or request.user.role == 'advisor' and request.user.advisor_profile.can_edit or request.user.role == 'admin' %}<a class="btn btn-primary" href="{% url 'upload_results' %}">Upload Results</a>{% endif %}
   </div>
 </div>
 
@@ -30,9 +36,10 @@
         <h5 class="modal-title">Register New Student</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form method="post" action="{% url 'advisor_register_student' %}">
+      <form id="registerStudentForm" method="post" action="{% url 'advisor_register_student' %}">
         {% csrf_token %}
         <div class="modal-body">
+          <div id="modalAlertPlaceholder"></div>
           <div class="mb-3">
             <label class="form-label">Full Name</label>
             <input class="form-control" name="name" required>
@@ -68,6 +75,7 @@
     </div>
   </div>
 </div>
+
 <div class="row g-4 mb-4">
   <div class="col-md-4">
     <div class="card text-white bg-primary h-100 shadow-sm">
@@ -86,14 +94,15 @@
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card text-white bg-warning h-100 shadow-sm">
+    <div class="card h-100 shadow-sm" style="background:linear-gradient(135deg,#e65100,#f57c00);border:none;">
       <div class="card-body">
-        <h5>Average</h5>
-        <h2>{{ average }}</h2>
+        <h5 style="color:#fff;">Average</h5>
+        <h2 style="color:#fff;">{{ average }}</h2>
       </div>
     </div>
   </div>
 </div>
+
 <div class="row g-4 mb-4">
   <div class="col-lg-12">
     <div class="card shadow-sm">
@@ -112,40 +121,54 @@
     </div>
   </div>
 </div>
+
 <div class="card shadow-sm mb-4">
   <div class="card-body">
     <h5 class="card-title mb-3">Recently Registered Students</h5>
-    {% if recent_registered_students %}
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead>
+    <div class="table-responsive" id="recentStudentsTableContainer" {% if not recent_registered_students %}style="display: none;"{% endif %}>
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Form</th>
+            <th>Combination</th>
+            <th>Registered</th>
+          </tr>
+        </thead>
+        <tbody id="recentStudentsTableBody">
+          {% for student in recent_registered_students %}
             <tr>
-              <th>Name</th>
-              <th>Username</th>
-              <th>Form</th>
-              <th>Combination</th>
-              <th>Registered</th>
+              <td class="student-name-{{ student.id }}" style="color: {% if student.prediction == 'At-Risk' %}#ff5252{% elif student.prediction == 'Average' %}#ffc107{% else %}#00ff88{% endif %}; font-weight: bold;">
+                {{ student.user.name|default:student.user.username }}
+              </td>
+              <td><span class="badge" style="background: rgba(0, 188, 212, 0.12); color: #00bcd4; border: 1px solid rgba(0, 188, 212, 0.25); font-size: 0.8rem; font-weight: 600;">{{ student.user.username }}</span></td>
+              <td>
+                {% if student.temp_password %}
+                  <div class="input-group input-group-sm" style="max-width: 140px;">
+                    <input type="password" class="form-control form-control-sm border-end-0 bg-light" value="{{ student.temp_password }}" readonly id="pw-{{ student.id }}" style="color: #ffffff !important; font-weight: bold;">
+                    <button class="btn btn-outline-secondary btn-sm border-start-0" type="button" onclick="togglePasswordVisibility('{{ student.id }}')">
+                      <i class="bi bi-eye" id="eye-{{ student.id }}"></i>
+                    </button>
+                  </div>
+                {% else %}
+                  <span class="text-muted small">N/A</span>
+                {% endif %}
+              </td>
+              <td>{{ student.form_level }}</td>
+              <td>{{ student.combination }}</td>
+              <td>{{ student.user.date_joined|date:"M d, Y H:i" }}</td>
             </tr>
-          </thead>
-          <tbody>
-            {% for student in recent_registered_students %}
-              <tr>
-                <td>{{ student.user.name|default:student.user.username }}</td>
-                <td>{{ student.user.username }}</td>
-                <td>{{ student.form_level }}</td>
-                <td>{{ student.combination }}</td>
-                <td>{{ student.user.date_joined|date:"M d, Y H:i" }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="text-muted mb-0">No student registrations yet.</p>
-    {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-muted mb-0" id="noStudentsPlaceholder" {% if recent_registered_students %}style="display: none;"{% endif %}>No student registrations yet.</p>
   </div>
 </div>
-<div class="card shadow-sm">
+
+<div class="card shadow-sm mb-4">
   <div class="card-body">
     <h5 class="card-title mb-3">Priority List</h5>
     <div class="table-responsive">
@@ -159,31 +182,34 @@
             <th>Status</th>
             <th>AI Risk</th>
             <th>Action</th>
+            <th>Save</th>
           </tr>
         </thead>
         <tbody>
           {% for student in priority_list %}
             <tr>
-              <td>{{ student.user.name }}</td>
+              <td class="student-name-{{ student.id }}" style="color: {% if student.prediction == 'At-Risk' %}#ff5252{% elif student.prediction == 'Average' %}#ffc107{% else %}#00ff88{% endif %}; font-weight: bold;">
+                {{ student.user.name }}
+              </td>
               <td>{{ student.form_level }}</td>
               <td>{{ student.combination }}</td>
-              <td>{{ student.attendance_rate }}%</td>
+              <td><input type="number" class="form-control form-control-sm" value="{{ student.attendance_rate }}" data-student-id="{{ student.id }}" name="attendance_rate" min="0" max="100" step="0.1"></td>
               <td>
                 {% if student.prediction == 'At-Risk' %}
-                  <span class="badge bg-danger">{{ student.prediction }}</span>
+                  <span class="badge status-badge-{{ student.id }}" style="background:rgba(229,57,53,0.25);color:#ef9a9a;border:1px solid rgba(229,57,53,0.4);">{{ student.prediction }}</span>
                 {% elif student.prediction == 'Average' %}
-                  <span class="badge bg-warning">{{ student.prediction }}</span>
+                  <span class="badge status-badge-{{ student.id }}" style="background:rgba(255,152,0,0.25);color:#ffcc80;border:1px solid rgba(255,152,0,0.4);">{{ student.prediction }}</span>
                 {% else %}
-                  <span class="badge bg-success">{{ student.prediction }}</span>
+                  <span class="badge status-badge-{{ student.id }}" style="background:rgba(0,200,83,0.2);color:#a5d6a7;border:1px solid rgba(0,200,83,0.3);">{{ student.prediction }}</span>
                 {% endif %}
               </td>
               <td>
                 {% if student.assessment.risk_level == 'high' %}
-                  <span class="badge bg-danger">High Risk</span>
+                  <span class="badge risk-badge-{{ student.id }}" style="background:rgba(229,57,53,0.25);color:#ef9a9a;border:1px solid rgba(229,57,53,0.4);">High Risk</span>
                 {% elif student.assessment.risk_level == 'medium' %}
-                  <span class="badge bg-warning">Medium Risk</span>
+                  <span class="badge risk-badge-{{ student.id }}" style="background:rgba(255,152,0,0.25);color:#ffcc80;border:1px solid rgba(255,152,0,0.4);">Medium Risk</span>
                 {% else %}
-                  <span class="badge bg-success">Low Risk</span>
+                  <span class="badge risk-badge-{{ student.id }}" style="background:rgba(0,200,83,0.2);color:#a5d6a7;border:1px solid rgba(0,200,83,0.3);">Low Risk</span>
                 {% endif %}
               </td>
               <td>
@@ -204,6 +230,7 @@
                   </ul>
                 </div>
               </td>
+              <td><button class="btn btn-sm btn-success save-inline" data-student-id="{{ student.id }}">Save</button></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -267,4 +294,201 @@
   </div>
 </div>
 {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function getCsrfToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 10) === 'csrftoken=') {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function togglePasswordVisibility(studentId) {
+    const input = document.getElementById('pw-' + studentId);
+    const icon = document.getElementById('eye-' + studentId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Save inline attendance
+    document.querySelectorAll('.save-inline').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const studentId = btn.getAttribute('data-student-id');
+            const input = document.querySelector(`input[name="attendance_rate"][data-student-id="${studentId}"]`);
+            if (!input) return;
+            const attendanceRate = input.value;
+            
+            const formData = new FormData();
+            formData.append('student_id', studentId);
+            formData.append('attendance_rate', attendanceRate);
+            
+            const csrfToken = getCsrfToken();
+            
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            
+            fetch("{% url 'edit_student_inline' %}", {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.textContent = 'Save';
+                if (data.error) {
+                    alert(data.error);
+                } else if (data.risk_label) {
+                    // Update Status Badge
+                    const statusBadge = document.querySelector(`.status-badge-${studentId}`);
+                    if (statusBadge) {
+                        statusBadge.textContent = data.risk_label;
+                        if (data.risk_label === 'At-Risk') {
+                            statusBadge.style.background = 'rgba(229,57,53,0.25)';
+                            statusBadge.style.color = '#ef9a9a';
+                            statusBadge.style.border = '1px solid rgba(229,57,53,0.4)';
+                        } else if (data.risk_label === 'Average') {
+                            statusBadge.style.background = 'rgba(255,152,0,0.25)';
+                            statusBadge.style.color = '#ffcc80';
+                            statusBadge.style.border = '1px solid rgba(255,152,0,0.4)';
+                        } else {
+                            statusBadge.style.background = 'rgba(0,200,83,0.2)';
+                            statusBadge.style.color = '#a5d6a7';
+                            statusBadge.style.border = '1px solid rgba(0,200,83,0.3)';
+                        }
+                    }
+                    
+                    // Update AI Risk Badge
+                    const riskBadge = document.querySelector(`.risk-badge-${studentId}`);
+                    if (riskBadge) {
+                        const riskText = data.risk_label === 'At-Risk' ? 'High Risk' : data.risk_label === 'Average' ? 'Medium Risk' : 'Low Risk';
+                        riskBadge.textContent = riskText;
+                        if (riskText === 'High Risk') {
+                            riskBadge.style.background = 'rgba(229,57,53,0.25)';
+                            riskBadge.style.color = '#ef9a9a';
+                            riskBadge.style.border = '1px solid rgba(229,57,53,0.4)';
+                        } else if (riskText === 'Medium Risk') {
+                            riskBadge.style.background = 'rgba(255,152,0,0.25)';
+                            riskBadge.style.color = '#ffcc80';
+                            riskBadge.style.border = '1px solid rgba(255,152,0,0.4)';
+                        } else {
+                            riskBadge.style.background = 'rgba(0,200,83,0.2)';
+                            riskBadge.style.color = '#a5d6a7';
+                            riskBadge.style.border = '1px solid rgba(0,200,83,0.3)';
+                        }
+                    }
+                    
+                    // Update row student name color
+                    const nameCell = document.querySelector(`.student-name-${studentId}`);
+                    if (nameCell) {
+                        nameCell.style.color = data.risk_label === 'At-Risk' ? '#ff5252' : data.risk_label === 'Average' ? '#ffc107' : '#00ff88';
+                    }
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.textContent = 'Save';
+                alert('An error occurred while saving.');
+            });
+        });
+    });
+
+    // Register Student AJAX
+    const regForm = document.getElementById('registerStudentForm');
+    if (regForm) {
+        regForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const alertPlaceholder = document.getElementById('modalAlertPlaceholder');
+            alertPlaceholder.innerHTML = '';
+            
+            const formData = new FormData(regForm);
+            const csrfToken = getCsrfToken();
+            formData.delete('csrfmiddlewaretoken'); // Delete to use header-only validation
+            
+            const submitBtn = regForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+            
+            fetch(regForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Student';
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Registration failed.');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                // Success: hide modal, reset form, dynamic prepend
+                const modalEl = document.getElementById('registerStudentModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) modalInstance.hide();
+                regForm.reset();
+                
+                // Add to table
+                const student = data.student;
+                const tbody = document.getElementById('recentStudentsTableBody');
+                const container = document.getElementById('recentStudentsTableContainer');
+                const placeholder = document.getElementById('noStudentsPlaceholder');
+                
+                const newRow = document.createElement('tr');
+                const nameColor = student.prediction === 'At-Risk' ? '#ff5252' : student.prediction === 'Average' ? '#ffc107' : '#00ff88';
+                
+                newRow.innerHTML = `
+                  <td class="student-name-${student.id}" style="color: ${nameColor}; font-weight: bold;">${student.name}</td>
+                  <td><span class="badge" style="background: rgba(0, 188, 212, 0.12); color: #00bcd4; border: 1px solid rgba(0, 188, 212, 0.25); font-size: 0.8rem; font-weight: 600;">${student.username}</span></td>
+                  <td>
+                    <div class="input-group input-group-sm" style="max-width: 140px;">
+                      <input type="password" class="form-control form-control-sm border-end-0 bg-light" value="${student.temp_password}" readonly id="pw-${student.id}" style="color: #ffffff !important; font-weight: bold;">
+                      <button class="btn btn-outline-secondary btn-sm border-start-0" type="button" onclick="togglePasswordVisibility('${student.id}')">
+                        <i class="bi bi-eye" id="eye-${student.id}"></i>
+                      </button>
+                    </div>
+                  </td>
+                  <td>${student.form_level}</td>
+                  <td>${student.combination}</td>
+                  <td>${student.date_joined}</td>
+                `;
+                
+                if (tbody) {
+                    tbody.insertBefore(newRow, tbody.firstChild);
+                }
+                if (container) container.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            })
+            .catch(err => {
+                alertPlaceholder.innerHTML = `<div class="alert alert-danger py-2 px-3" role="alert" style="font-size:0.85rem;"><i class="bi bi-exclamation-circle me-1"></i>${err.message}</div>`;
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

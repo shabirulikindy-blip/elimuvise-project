@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+4{% extends 'base.html' %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-10">
@@ -120,7 +120,8 @@
           <table class="table table-sm">
             <thead>
               <tr>
-                <th>Student</th>
+                <th>Student ID</th>
+                <th>Name</th>
                 <th>Subject</th>
                 <th>Score</th>
                 <th>Assessment</th>
@@ -130,7 +131,8 @@
             <tbody>
               {% for result in recent_results %}
               <tr>
-                <td>{{ result.student.user.name }}</td>
+                <td><span class="badge" style="background: rgba(0, 188, 212, 0.12); color: #00bcd4; border: 1px solid rgba(0, 188, 212, 0.25); font-size: 0.8rem; font-weight: 600;">{{ result.student.user.username }}</span></td>
+                <td style="color:#ffffff; font-weight:bold;">{{ result.student.user.name }}</td>
                 <td>{{ result.subject }}</td>
                 <td><strong>{{ result.score }}</strong></td>
                 <td>{{ result.assessment_name }}</td>

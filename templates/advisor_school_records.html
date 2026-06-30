@@ -1,0 +1,1075 @@
+{% extends 'base.html' %}
+{% block branding %}
+<div class="branding-hero">
+  <div class="brand-left">
+    <span class="badge-brand">{{ school_name }}</span>
+    <h1>School Records & Dashboard</h1>
+    <p>Review student records, advisors list, pending registrations, and run AI analysis for personalised student support.</p>
+  </div>
+  <div class="brand-right text-center">
+    <i class="bi bi-building-gear" style="font-size:3.5rem;color:var(--accent-green);opacity:0.3;"></i>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Navigation -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <a href="{% url 'advisor_portal' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Portal
+  </a>
+  <div class="d-flex gap-2 align-items-center">
+    {% if request.user.is_school_advisor %}
+    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#registerAdvisorModal">
+      <i class="bi bi-person-plus me-1"></i> Register Advisor
+    </button>
+    {% endif %}
+    {% if can_edit %}
+    <span class="badge" style="background:rgba(255,193,7,0.15);color:#ffc107;font-size:0.75rem;padding:8px 14px;">
+      <i class="bi bi-pencil-fill me-1"></i> Edit Access
+    </span>
+    {% endif %}
+    {% if can_approve %}
+    <span class="badge" style="background:rgba(255,82,82,0.15);color:#ff5252;font-size:0.75rem;padding:8px 14px;">
+      <i class="bi bi-shield-check me-1"></i> Approve Users
+    </span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- School Details Tile -->
+<div class="row g-3 mb-4">
+  <div class="col-md-12">
+    <div class="card" style="background:linear-gradient(135deg, rgba(0,255,136,0.06), rgba(0,188,212,0.06)); border:1px solid rgba(0,255,136,0.15); border-radius:1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+      <div class="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+          <span class="badge mb-2" style="background:rgba(0,255,136,0.15); color:#00ff88; font-size:0.7rem; padding:5px 10px;">
+            <i class="bi bi-building me-1"></i> SCHOOL DASHBOARD TILE
+          </span>
+          <h4 class="mb-1 text-white" style="font-weight: 700;">{{ school_name }}</h4>
+          <p class="text-muted mb-0 small">
+            <i class="bi bi-shield-check-fill me-1" style="color:#00ff88;"></i> Primary Advisor: 
+            <strong style="color: #00bcd4;">
+              {% for adv in advisors %}
+                {% if adv.is_school_advisor %}{{ adv.name|default:adv.username }}{% endif %}
+              {% endfor %}
+            </strong>
+          </p>
+        </div>
+        <div class="d-flex gap-4">
+          <div class="text-center">
+            <small class="text-muted d-block small" style="letter-spacing: 0.5px; font-weight: 600;">TOTAL STUDENTS</small>
+            <strong class="text-white" style="font-size:1.6rem;">{{ students|length }}</strong>
+          </div>
+          <div class="text-center" style="border-left:1px solid rgba(255,255,255,0.1); padding-left:1.5rem;">
+            <small class="text-muted d-block small" style="letter-spacing: 0.5px; font-weight: 600;">TOTAL ADVISORS</small>
+            <strong class="text-white" style="font-size:1.6rem;">{{ advisors|length }}</strong>
+          </div>
+          <div class="text-center" style="border-left:1px solid rgba(255,255,255,0.1); padding-left:1.5rem;">
+            <small class="text-muted d-block small" style="letter-spacing: 0.5px; font-weight: 600;">PENDING USERS</small>
+            <strong class="text-white" style="font-size:1.6rem; color:#ff5252;">{{ pending_users|length }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs Navigation -->
+<ul class="ev-tabs mb-4" role="tablist">
+  <li class="nav-item">
+    <button class="ev-tab active" data-bs-toggle="tab" data-bs-target="#studentsTab" data-color="#00ff88">
+      <i class="bi bi-mortarboard me-1"></i> Students
+      <span class="ev-tab-count" style="background:rgba(0,255,136,0.2);color:#00ff88;">{{ students|length }}</span>
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="ev-tab" data-bs-toggle="tab" data-bs-target="#advisorsTab" data-color="#00bcd4">
+      <i class="bi bi-person-badge me-1"></i> Advisors
+      <span class="ev-tab-count" style="background:rgba(0,188,212,0.2);color:#00bcd4;">{{ advisors|length }}</span>
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="ev-tab" data-bs-toggle="tab" data-bs-target="#pendingTab" data-color="#ff5252">
+      <i class="bi bi-clock-history me-1"></i> Pending
+      <span class="ev-tab-count" style="background:rgba(255,82,82,0.2);color:#ff5252;">{{ pending_users|length }}</span>
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="ev-tab ev-tab-log" data-bs-toggle="tab" data-bs-target="#logsTab" data-color="#ffc107">
+      <i class="bi bi-journal-text me-1"></i> Activity Log
+      <span class="ev-tab-log-pulse"></span>
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content">
+  <!-- ═══════ STUDENTS TAB ═══════ -->
+  <div class="tab-pane fade show active" id="studentsTab">
+    <!-- Filter -->
+    <div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <input type="text" id="recordFilter" class="form-control" placeholder="Filter by student ID, combination..." style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;max-width:400px;">
+      <span class="text-muted small">Total: <strong>{{ students|length }}</strong> Students</span>
+    </div>
+
+    <div class="table-responsive" style="border:1px solid rgba(255,255,255,0.08); border-radius:0.75rem; background:rgba(255,255,255,0.01);">
+      <table class="table table-dark table-hover mb-0 align-middle" style="font-size:0.85rem; border-collapse: separate;">
+        <thead>
+          <tr style="background:rgba(0,255,136,0.05); color:#fff; border-bottom:1px solid rgba(0,255,136,0.15);">
+            <th class="py-3 px-3">Student ID</th>
+            <th class="py-3">Gender</th>
+            <th class="py-3">Age</th>
+            <th class="py-3">Study Hours</th>
+            <th class="py-3">Attendance</th>
+            <th class="py-3">Parent Edu</th>
+            <th class="py-3">Internet</th>
+            <th class="py-3">Extracurricular</th>
+            <th class="py-3">Prev Score</th>
+            <th class="py-3">Final Score</th>
+            <th class="py-3">Prediction</th>
+            <th class="py-3 px-3 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr class="student-record-row" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <td class="py-3 px-3">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-person-fill" style="color: {% if student.risk_level == 'high' %}#ff5252{% elif student.risk_level == 'medium' %}#ffc107{% else %}#00ff88{% endif %}; font-size:1.1rem;"></i>
+                <div>
+                  <strong style="color:#fff; cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#collapse-stu-{{ student.id }}" title="Click to view details/AI suggestions">
+                    {{ student.user.username }}
+                  </strong>
+                  {% if student.user.name %}
+                    <div class="text-white-50 small" style="font-size: 0.8rem; font-weight: 500;">{{ student.user.name }}</div>
+                  {% endif %}
+                  <div class="small text-muted" style="font-size: 0.75rem;">{{ student.combination }} · {{ student.form_level }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3">{{ student.gender }}</td>
+            <td class="py-3">{% if student.age %}{{ student.age|floatformat:0 }}{% else %}-{% endif %}</td>
+            <td class="py-3"><span class="badge" style="background:rgba(0,255,136,0.1); color:#00ff88;">{{ student.study_hours_per_week }} hrs</span></td>
+            <td class="py-3"><span class="badge" style="background:rgba(0,188,212,0.1); color:#00bcd4;">{{ student.attendance_rate }}%</span></td>
+            <td class="py-3 text-muted">{{ student.parent_education }}</td>
+            <td class="py-3">
+              {% if student.internet_access == 'Yes' %}
+                <span class="text-success"><i class="bi bi-wifi me-1"></i>Yes</span>
+              {% else %}
+                <span class="text-muted"><i class="bi bi-wifi-off me-1"></i>No</span>
+              {% endif %}
+            </td>
+            <td class="py-3">{{ student.extracurricular }}</td>
+            <td class="py-3">
+              {% for res in student.results.all %}
+                {% if "Previous" in res.subject or "Previous" in res.assessment_name %}
+                  <strong style="color:#00ff88;">{{ res.score|floatformat:1 }}</strong>
+                {% endif %}
+              {% empty %}
+                -
+              {% endfor %}
+            </td>
+            <td class="py-3">
+              {% for res in student.results.all %}
+                {% if "Final" in res.subject or "Final" in res.assessment_name %}
+                  <strong style="color:#00bcd4;">{{ res.score|floatformat:1 }}</strong>
+                {% endif %}
+              {% empty %}
+                -
+              {% endfor %}
+            </td>
+            <td class="py-3">
+              <span class="badge" style="
+                {% if student.risk_level == 'high' %}background:rgba(255,82,82,0.15); color:#ff5252;
+                {% elif student.risk_level == 'medium' %}background:rgba(255,193,7,0.15); color:#ffc107;
+                {% else %}background:rgba(0,255,136,0.15); color:#00ff88;
+                {% endif %} font-weight:600; padding:6px 12px; border-radius:30px;">
+                {{ student.prediction }}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-end">
+              <div class="d-flex align-items-center justify-content-end gap-2">
+                {% if can_edit %}
+                <button class="btn btn-xs btn-outline-info ai-analyse-btn py-1 px-2" style="font-size:0.75rem;" data-student-id="{{ student.id }}" onclick="runAiAnalysis({{ student.id }});">
+                  <i class="bi bi-robot"></i> AI Analyse
+                </button>
+                {% endif %}
+                <button class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size:0.75rem;" data-bs-toggle="collapse" data-bs-target="#collapse-stu-{{ student.id }}">
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Collapsible row for AI Suggestion and Detailed Results editing -->
+          <tr id="collapse-stu-{{ student.id }}" class="collapse">
+            <td colspan="12" style="background:rgba(255,255,255,0.015); padding:1.5rem;">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <!-- AI Suggestion Box -->
+                  <div id="ai-box-{{ student.id }}" class="p-3 mb-2" style="background:rgba(0,255,136,0.04); border-radius:10px; border:1px solid rgba(0,255,136,0.1); {% if not student.ai_suggestion %}display:none;{% endif %}">
+                    <div class="d-flex align-items-start gap-2">
+                      <i class="bi bi-robot" style="color:#00ff88; font-size:1.3rem; margin-top:2px;"></i>
+                      <div>
+                        <small style="color:#00ff88; font-weight:600;">AI Suggestion</small>
+                        {% if student.ai_analysed_at %}<small class="text-muted ms-2">· {{ student.ai_analysed_at|date:"M d, Y H:i" }}</small>{% endif %}
+                        <p class="mb-0 mt-1" style="color:#ccc; font-size:0.9rem;" id="ai-text-{{ student.id }}">{{ student.ai_suggestion|default:"" }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  {% if not student.ai_suggestion %}
+                    <div class="text-muted small p-2"><i class="bi bi-info-circle me-1"></i> No AI suggestions yet. Click the "AI Analyse" button to generate suggestions.</div>
+                  {% endif %}
+                </div>
+                
+                <div class="col-md-6">
+                  <!-- Results Detail / Editor -->
+                  <h6 class="text-white mb-2"><i class="bi bi-file-earmark-bar-graph me-1" style="color:#00bcd4;"></i> Detailed Exam Records</h6>
+                  {% if student.results.all %}
+                  <div class="table-responsive">
+                    <table class="table table-sm table-dark table-borderless mb-0" style="font-size:0.8rem;">
+                      <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                          <th>Assessment</th>
+                          <th>Subject/Type</th>
+                          <th>Score</th>
+                          {% if can_edit %}<th>Action</th>{% endif %}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for res in student.results.all %}
+                        <tr>
+                          <td>{{ res.assessment_name }}</td>
+                          <td>{{ res.subject }}</td>
+                          <td><strong class="text-white">{{ res.score }}</strong></td>
+                          {% if can_edit %}
+                          <td>
+                            <button class="btn btn-xs btn-outline-warning py-0 px-2" style="font-size:0.7rem;"
+                                    data-result-id="{{ res.id }}"
+                                    data-subject="{{ res.subject }}"
+                                    data-score="{{ res.score }}"
+                                    data-assessment="{{ res.assessment_name }}"
+                                    data-student-id="{{ student.id }}"
+                                    onclick="openEditResult(this)">
+                              <i class="bi bi-pencil"></i> Edit
+                            </button>
+                          </td>
+                          {% endif %}
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  {% else %}
+                  <div class="text-muted small p-2">No detailed score records found.</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Advisory Notes & Parent Linkage Row -->
+              <div class="row g-3 mt-3 border-top border-secondary pt-3" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
+                <div class="col-md-6">
+                  <h6 class="text-white mb-2"><i class="bi bi-journal-text me-1" style="color:#ffc107;"></i> Advisory Notes Log</h6>
+                  
+                  <div class="advisory-notes-list-{{ student.id }} mb-3" style="max-height: 180px; overflow-y: auto; padding-right: 5px;">
+                    {% for note in student.advisory_notes.all %}
+                      <div class="p-2 mb-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                          <strong>{{ note.advisor.name|default:note.advisor.username }}</strong>
+                          <span>{{ note.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <p class="mb-0 text-white-50 small">{{ note.note_text }}</p>
+                      </div>
+                    {% empty %}
+                      <p class="text-muted small no-notes-{{ student.id }}">No advisory notes logged yet.</p>
+                    {% endfor %}
+                  </div>
+
+                  {% if can_edit %}
+                  <div class="input-group input-group-sm">
+                    <input type="text" class="form-control advisory-note-input-{{ student.id }}" placeholder="Add a new advisory note..." style="background:rgba(0,0,0,0.2); color:#fff; border-color:rgba(255,255,255,0.15);">
+                    <button class="btn btn-warning btn-sm" onclick="addAdvisoryNote({{ student.id }})">Log Note</button>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                  <h6 class="text-white mb-2"><i class="bi bi-people me-1" style="color:#a5d6a7;"></i> Parent Association</h6>
+                  <div class="p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="mb-3">
+                      <span class="text-muted small">Associated Parent:</span>
+                      <strong class="d-block text-white parent-name-label-{{ student.id }}">
+                        {% if student.parent %}
+                          {{ student.parent.name|default:student.parent.username }} ({{ student.parent.email }})
+                        {% else %}
+                          <span class="text-warning">No Parent Linked</span>
+                        {% endif %}
+                      </strong>
+                    </div>
+
+                    {% if can_edit %}
+                    <div class="d-flex gap-2">
+                      <select class="form-select form-select-sm parent-select-{{ student.id }}" style="background:rgba(0,0,0,0.3); color:#fff; border-color:rgba(255,255,255,0.15);">
+                        <option value="">-- Choose Parent --</option>
+                        {% for parent in parents %}
+                          <option value="{{ parent.id }}" {% if student.parent.id == parent.id %}selected{% endif %}>
+                            {{ parent.name|default:parent.username }} ({{ parent.username }})
+                          </option>
+                        {% endfor %}
+                      </select>
+                      <button class="btn btn-sm btn-outline-success" onclick="linkParent({{ student.id }})">Update Link</button>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          {% empty %}
+          <tr>
+            <td colspan="12" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox" style="font-size:3rem; opacity:0.3;"></i>
+              <h5 class="mt-3">No Students Found</h5>
+              <p class="mb-0">No students are registered at {{ school_name }} yet.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════ ADVISORS TAB ═══════ -->
+  <div class="tab-pane fade" id="advisorsTab">
+    <div class="card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+      <div class="card-header" style="background:rgba(0,188,212,0.05);border-bottom:1px solid rgba(0,188,212,0.1);">
+        <h6 class="mb-0"><i class="bi bi-person-badge me-2" style="color:#00bcd4;"></i>School Advisors & Permissions</h6>
+      </div>
+      <div class="card-body p-0">
+        {% if advisors %}
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0">
+            <thead>
+              <tr style="background:rgba(0,0,0,0.3);">
+                <th>Name</th>
+                <th>Username</th>
+                <th>Phone</th>
+                <th>Subjects</th>
+                <th>Primary</th>
+                <th>Upload</th>
+                <th>Edit/AI</th>
+                <th>Approve</th>
+                {% if request.user.is_school_advisor %}
+                <th>Actions</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for advisor in advisors %}
+              <tr>
+                <td>
+                  <strong>{{ advisor.name|default:advisor.username }}</strong>
+                  {% if advisor.is_school_advisor %}<br><span class="badge" style="background:rgba(0,255,136,0.2);color:#00ff88;font-size:0.6rem;">PRIMARY</span>{% endif %}
+                  
+                  {% if request.user.is_school_advisor and advisor.id != request.user.id %}
+                  <!-- Hidden Form associated with this row's switches -->
+                  <form id="perm-form-{{ advisor.id }}" method="post" action="{% url 'admin_grant_permission' advisor.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="school_id" value="{{ school.id }}">
+                  </form>
+                  {% endif %}
+                </td>
+                <td><code>{{ advisor.username }}</code></td>
+                <td>{{ advisor.phone|default:"-" }}</td>
+                <td>{{ advisor.subjects|default:"-" }}</td>
+                <!-- Primary Advisor Switch -->
+                <td>
+                  {% if request.user.is_school_advisor and advisor.id != request.user.id %}
+                  <label class="ev-custom-switch switch-green" title="Toggle Primary Advisor">
+                    <input type="checkbox" name="is_school_advisor" value="1" {% if advisor.is_school_advisor %}checked{% endif %} form="perm-form-{{ advisor.id }}">
+                    <span class="slider"></span>
+                  </label>
+                  {% else %}
+                  <label class="ev-custom-switch switch-green" style="pointer-events:none;" title="Primary Advisor">
+                    <input type="checkbox" name="is_school_advisor" value="1" {% if advisor.is_school_advisor %}checked{% endif %} disabled>
+                    <span class="slider"></span>
+                  </label>
+                  {% endif %}
+                </td>
+                <!-- Can Upload Switch -->
+                <td>
+                  {% if request.user.is_school_advisor and advisor.id != request.user.id %}
+                  <label class="ev-custom-switch switch-cyan" title="Toggle Upload Permission">
+                    <input type="checkbox" name="can_upload" value="1" {% if advisor.can_upload %}checked{% endif %} form="perm-form-{{ advisor.id }}">
+                    <span class="slider"></span>
+                  </label>
+                  {% else %}
+                  <label class="ev-custom-switch switch-cyan" style="pointer-events:none;" title="Upload Permission">
+                    <input type="checkbox" name="can_upload" value="1" {% if advisor.can_upload %}checked{% endif %} disabled>
+                    <span class="slider"></span>
+                  </label>
+                  {% endif %}
+                </td>
+                <!-- Can Edit Switch -->
+                <td>
+                  {% if request.user.is_school_advisor and advisor.id != request.user.id %}
+                  <label class="ev-custom-switch switch-amber" title="Toggle Edit & AI Permission">
+                    <input type="checkbox" name="can_edit_records" value="1" {% if advisor.can_edit_records %}checked{% endif %} form="perm-form-{{ advisor.id }}">
+                    <span class="slider"></span>
+                  </label>
+                  {% else %}
+                  <label class="ev-custom-switch switch-amber" style="pointer-events:none;" title="Edit & AI Permission">
+                    <input type="checkbox" name="can_edit_records" value="1" {% if advisor.can_edit_records %}checked{% endif %} disabled>
+                    <span class="slider"></span>
+                  </label>
+                  {% endif %}
+                </td>
+                <!-- Can Approve Switch -->
+                <td>
+                  {% if request.user.is_school_advisor and advisor.id != request.user.id %}
+                  <label class="ev-custom-switch switch-red" title="Toggle Approve Users Permission">
+                    <input type="checkbox" name="can_approve_users" value="1" {% if advisor.can_approve_users %}checked{% endif %} form="perm-form-{{ advisor.id }}">
+                    <span class="slider"></span>
+                  </label>
+                  {% else %}
+                  <label class="ev-custom-switch switch-red" style="pointer-events:none;" title="Approve Users Permission">
+                    <input type="checkbox" name="can_approve_users" value="1" {% if advisor.can_approve_users %}checked{% endif %} disabled>
+                    <span class="slider"></span>
+                  </label>
+                  {% endif %}
+                </td>
+                {% if request.user.is_school_advisor %}
+                <td>
+                  {% if advisor.id != request.user.id %}
+                  <button type="submit" form="perm-form-{{ advisor.id }}" class="ev-perm-save-btn" title="Hifadhi Ruhusa">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Save</span>
+                  </button>
+                  {% else %}
+                  <span class="text-muted small">-</span>
+                  {% endif %}
+                </td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4" style="color:#8baabb;">
+          <p class="mb-0">No advisors assigned to this school yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ PENDING TAB ═══════ -->
+  <div class="tab-pane fade" id="pendingTab">
+    <div class="card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+      <div class="card-header" style="background:rgba(255,82,82,0.05);border-bottom:1px solid rgba(255,82,82,0.1);">
+        <h6 class="mb-0"><i class="bi bi-clock-history me-2" style="color:#ff5252;"></i>Pending Registrations</h6>
+      </div>
+      <div class="card-body">
+        {% if pending_users %}
+        {% for pu in pending_users %}
+        <div class="d-flex align-items-center justify-content-between p-3 mb-2" style="background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06);">
+          <div>
+            <strong style="color:#fff;">{{ pu.name|default:pu.username }}</strong>
+            <span class="badge bg-secondary ms-2">{{ pu.role }}</span>
+            <br><small class="text-muted">{{ pu.email|default:"No email" }} · Joined {{ pu.date_joined|date:"M d, Y" }}</small>
+          </div>
+          <div class="d-flex gap-2">
+            {% if can_approve %}
+            <form method="post" action="{% url 'advisor_approve_user' pu.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve">
+              <button class="ev-approve-btn" type="submit">
+                <span class="ev-approve-glow"></span>
+                <i class="bi bi-check-circle-fill me-1"></i> Approve
+              </button>
+            </form>
+            <form method="post" action="{% url 'advisor_approve_user' pu.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject">
+              <button class="ev-reject-btn" type="submit" title="Reject">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            </form>
+            {% else %}
+            <span class="text-muted small"><i class="bi bi-hourglass-split me-1"></i>Awaiting Admin approval</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-4" style="color:#8baabb;">
+          <i class="bi bi-check-circle" style="font-size:2rem;opacity:0.3;color:#00ff88;"></i>
+          <p class="mt-2 mb-0">All user registrations have been processed. No pending accounts.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ LOGS TAB ═══════ -->
+  <div class="tab-pane fade" id="logsTab">
+    <div class="card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+      <div class="card-header" style="background:rgba(255,193,7,0.05);border-bottom:1px solid rgba(255,193,7,0.1);">
+        <h6 class="mb-0"><i class="bi bi-journal-text me-2" style="color:#ffc107;"></i>Recent School Activity</h6>
+      </div>
+      <div class="card-body p-0">
+        {% if logs %}
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0" style="font-size:0.85rem;">
+            <thead>
+              <tr style="background:rgba(0,0,0,0.3);">
+                <th>Time</th>
+                <th>Event</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in logs %}
+              <tr>
+                <td><small class="text-muted">{{ log.timestamp|date:"M d, H:i" }}</small></td>
+                <td><span class="badge" style="background:rgba(255,193,7,0.2);color:#ffc107;">{{ log.event_type }}</span></td>
+                <td>{{ log.description }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4" style="color:#8baabb;">
+          <p class="mb-0">No activity logged for this school yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ REGISTER ADVISOR MODAL (Primary Advisor only) ═══════ -->
+{% if request.user.is_school_advisor %}
+<div class="modal fade" id="registerAdvisorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:#0d2233;border:1px solid rgba(0,255,136,0.2);">
+      <div class="modal-header" style="border-color:rgba(0,255,136,0.1);">
+        <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2" style="color:#00ff88;"></i>Register School Advisor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'advisor_register_advisor' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p class="text-muted small"><i class="bi bi-info-circle me-1"></i> Registered advisors will be pending Platform Admin approval before they can log in.</p>
+          <div class="mb-3">
+            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+            <input class="form-control" name="name" required style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Username <span class="text-danger">*</span></label>
+            <input class="form-control" name="username" required style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" name="password" required style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input class="form-control" name="phone" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+          </div>
+        </div>
+        <div class="modal-footer" style="border-color:rgba(0,255,136,0.1);">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Register Advisor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══════ EDIT RESULT MODAL ═══════ -->
+<div class="modal fade" id="editResultModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:#0d2233;border:1px solid rgba(255,193,7,0.2);">
+      <div class="modal-header" style="border-color:rgba(255,193,7,0.1);">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2" style="color:#ffc107;"></i>Edit Result</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="editResultAlert"></div>
+        <input type="hidden" id="editResultId">
+        <div class="mb-3">
+          <label class="form-label">Subject</label>
+          <input class="form-control" id="editSubject" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Score</label>
+          <input type="number" step="0.1" class="form-control" id="editScore" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Assessment Name</label>
+          <input class="form-control" id="editAssessment" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;">
+        </div>
+      </div>
+      <div class="modal-footer" style="border-color:rgba(255,193,7,0.1);">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" onclick="submitEditResult()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Filter student records
+const recordFilter = document.getElementById('recordFilter');
+if (recordFilter) {
+  recordFilter.addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('tbody tr.student-record-row').forEach(row => {
+      const isVisible = row.textContent.toLowerCase().includes(q);
+      row.style.display = isVisible ? '' : 'none';
+      const toggleBtn = row.querySelector('[data-bs-toggle="collapse"]');
+      if (toggleBtn) {
+        const collapseId = toggleBtn.getAttribute('data-bs-target');
+        const collapseRow = document.querySelector(collapseId);
+        if (collapseRow) {
+          if (!isVisible) {
+            collapseRow.style.display = 'none';
+          } else {
+            collapseRow.style.display = collapseRow.classList.contains('show') ? '' : 'none';
+          }
+        }
+      }
+    });
+  });
+}
+
+// Edit Result Functions
+function openEditResult(btn) {
+  const resultId = btn.getAttribute('data-result-id');
+  const subject = btn.getAttribute('data-subject');
+  const score = btn.getAttribute('data-score');
+  const assessment = btn.getAttribute('data-assessment');
+  
+  document.getElementById('editResultId').value = resultId;
+  document.getElementById('editSubject').value = subject;
+  document.getElementById('editScore').value = score;
+  document.getElementById('editAssessment').value = assessment;
+  
+  document.getElementById('editResultAlert').innerHTML = '';
+  
+  const modal = new bootstrap.Modal(document.getElementById('editResultModal'));
+  modal.show();
+}
+
+function submitEditResult() {
+  const resultId = document.getElementById('editResultId').value;
+  const alertBox = document.getElementById('editResultAlert');
+  const csrfToken = getCsrfToken();
+
+  const formData = new FormData();
+  formData.append('csrfmiddlewaretoken', csrfToken);
+
+  formData.append('subject', document.getElementById('editSubject').value);
+  formData.append('score', document.getElementById('editScore').value);
+  formData.append('assessment_name', document.getElementById('editAssessment').value);
+
+  fetch(`/advisor/edit-result/${resultId}/`, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: formData,
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      alertBox.innerHTML = `<div class="alert alert-success py-2">${data.message}</div>`;
+      const subjectEl = document.querySelector(`.result-subject-${resultId}`);
+      const scoreEl = document.querySelector(`.result-score-${resultId}`);
+      const assessmentEl = document.querySelector(`.result-assessment-${resultId}`);
+      if (subjectEl) subjectEl.textContent = data.result.subject;
+      if (scoreEl) scoreEl.textContent = data.result.score;
+      if (assessmentEl) assessmentEl.textContent = data.result.assessment_name;
+      setTimeout(() => {
+        bootstrap.Modal.getInstance(document.getElementById('editResultModal'))?.hide();
+        window.location.reload();
+      }, 1500);
+    } else {
+      alertBox.innerHTML = `<div class="alert alert-danger py-2">${data.message}</div>`;
+    }
+  })
+  .catch(err => {
+    alertBox.innerHTML = `<div class="alert alert-danger py-2">Network error: ${err}</div>`;
+  });
+}
+
+// AI Analysis via AJAX
+function runAiAnalysis(studentId) {
+  const btn = document.querySelector(`.ai-analyse-btn[data-student-id="${studentId}"]`);
+  const aiBox = document.getElementById(`ai-box-${studentId}`);
+  const aiText = document.getElementById(`ai-text-${studentId}`);
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analysing...';
+  }
+
+  const collapseEl = document.getElementById(`collapse-stu-${studentId}`);
+  if (collapseEl && !collapseEl.classList.contains('show')) {
+    new bootstrap.Collapse(collapseEl, { toggle: true });
+  }
+
+  fetch(`/advisor/ai-analyse/${studentId}/`, {
+    method: 'GET',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      aiBox.style.display = '';
+      aiText.textContent = data.suggestion;
+    } else {
+      aiBox.style.display = '';
+      aiText.textContent = 'Error: ' + data.message;
+      aiBox.style.borderColor = 'rgba(255,82,82,0.3)';
+    }
+  })
+  .catch(err => {
+    aiBox.style.display = '';
+    aiText.textContent = 'Network error: ' + err;
+  })
+  .finally(() => {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-robot me-1"></i> AI Analyse';
+    }
+  });
+}
+
+// CSRF Helper for AJAX requests
+function getCsrfToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 10) === 'csrftoken=') {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function addAdvisoryNote(studentId) {
+    const input = document.querySelector('.advisory-note-input-' + studentId);
+    if (!input) return;
+    const noteText = input.value.trim();
+    if (!noteText) {
+        alert('Please enter some note text.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('student_id', studentId);
+    formData.append('note_text', noteText);
+
+    fetch("{% url 'add_advisory_note' %}", {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            const list = document.querySelector('.advisory-notes-list-' + studentId);
+            const noNotes = document.querySelector('.no-notes-' + studentId);
+            if (noNotes) noNotes.remove();
+
+            const noteDiv = document.createElement('div');
+            noteDiv.className = 'p-2 mb-2 rounded';
+            noteDiv.style.background = 'rgba(255,255,255,0.03)';
+            noteDiv.style.border = '1px solid rgba(255,255,255,0.05)';
+            noteDiv.innerHTML = `
+                <div class="d-flex justify-content-between text-muted small mb-1">
+                    <strong>${data.note.advisor_name}</strong>
+                    <span>${data.note.created_at}</span>
+                </div>
+                <p class="mb-0 text-white-50 small">${data.note.note_text}</p>
+            `;
+            list.insertBefore(noteDiv, list.firstChild);
+        } else {
+            alert(data.message || 'Failed to add note.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('An error occurred.');
+    });
+}
+
+function linkParent(studentId) {
+    const select = document.querySelector('.parent-select-' + studentId);
+    if (!select) return;
+    const parentId = select.value;
+
+    const formData = new FormData();
+    formData.append('student_id', studentId);
+    formData.append('parent_id', parentId);
+
+    fetch("{% url 'link_parent_to_student' %}", {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const label = document.querySelector('.parent-name-label-' + studentId);
+            if (label) {
+                if (parentId) {
+                    label.textContent = data.parent_name;
+                } else {
+                    label.innerHTML = '<span class="text-warning">No Parent Linked</span>';
+                }
+            }
+            alert(data.message);
+        } else {
+            alert(data.message || 'Failed to update parent link.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('An error occurred.');
+    });
+}
+</script>
+
+
+<style>
+/* ── Premium Tab Navigation ───────────────────────── */
+.ev-tabs {
+  display: flex;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0.4rem;
+  margin: 0 0 1.5rem 0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  flex-wrap: wrap;
+}
+.ev-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 0.7rem;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  position: relative;
+}
+.ev-tab:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+}
+.ev-tab.active {
+  background: rgba(0,255,136,0.1);
+  color: #00ff88;
+  box-shadow: 0 0 0 1px rgba(0,255,136,0.3) inset;
+}
+.ev-tab[data-bs-target="#advisorsTab"].active {
+  background: rgba(0,188,212,0.1);
+  color: #00bcd4;
+  box-shadow: 0 0 0 1px rgba(0,188,212,0.3) inset;
+}
+.ev-tab[data-bs-target="#pendingTab"].active {
+  background: rgba(255,82,82,0.1);
+  color: #ff5252;
+  box-shadow: 0 0 0 1px rgba(255,82,82,0.3) inset;
+}
+.ev-tab[data-bs-target="#logsTab"].active,
+.ev-tab-log.active {
+  background: rgba(255,193,7,0.12);
+  color: #ffc107;
+  box-shadow: 0 0 0 1px rgba(255,193,7,0.35) inset,
+              0 0 16px rgba(255,193,7,0.2);
+}
+.ev-tab-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+.ev-tab-log {
+  color: rgba(255,193,7,0.65);
+}
+.ev-tab-log-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffc107;
+  box-shadow: 0 0 6px #ffc107;
+  animation: logPulse 1.6s ease-in-out infinite;
+  margin-left: 0.1rem;
+  flex-shrink: 0;
+}
+@keyframes logPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.6); }
+}
+
+/* ── Custom Switch Styles ─────────────────────────── */
+.ev-custom-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 22px;
+  vertical-align: middle;
+}
+.ev-custom-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ev-custom-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  transition: .3s;
+  border-radius: 34px;
+}
+.ev-custom-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 2.5px;
+  background-color: rgba(255,255,255,0.4);
+  transition: .3s;
+  border-radius: 50%;
+}
+.ev-custom-switch input:checked + .slider {
+  background-color: rgba(255,255,255,0.1);
+}
+.ev-custom-switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.switch-green input:checked + .slider {
+  background-color: rgba(0,255,136,0.12);
+  border-color: rgba(0,255,136,0.45);
+}
+.switch-green input:checked + .slider:before {
+  background-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0,255,136,0.6);
+}
+
+.switch-cyan input:checked + .slider {
+  background-color: rgba(0,188,212,0.12);
+  border-color: rgba(0,188,212,0.45);
+}
+.switch-cyan input:checked + .slider:before {
+  background-color: #00bcd4;
+  box-shadow: 0 0 8px rgba(0,188,212,0.6);
+}
+
+.switch-amber input:checked + .slider {
+  background-color: rgba(255,193,7,0.12);
+  border-color: rgba(255,193,7,0.45);
+}
+.switch-amber input:checked + .slider:before {
+  background-color: #ffc107;
+  box-shadow: 0 0 8px rgba(255,193,7,0.6);
+}
+
+.switch-red input:checked + .slider {
+  background-color: rgba(255,82,82,0.12);
+  border-color: rgba(255,82,82,0.45);
+}
+.switch-red input:checked + .slider:before {
+  background-color: #ff5252;
+  box-shadow: 0 0 8px rgba(255,82,82,0.6);
+}
+
+/* ── Approve / Reject Buttons ─────────────────────── */
+.ev-approve-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.52rem 1.25rem;
+  border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.87rem;
+  color: #0a1f15;
+  background: linear-gradient(135deg, #00ff88 0%, #00e676 40%, #00c853 100%);
+  box-shadow: 0 4px 20px rgba(0,255,136,0.4), 0 2px 6px rgba(0,0,0,0.3);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ev-approve-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 28px rgba(0,255,136,0.55);
+}
+.ev-approve-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: translateX(-100%);
+  animation: approveShimmer 2.2s ease-in-out infinite;
+}
+@keyframes approveShimmer {
+  0%   { transform: translateX(-100%); }
+  60%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+.ev-reject-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,82,82,0.35);
+  background: rgba(255,82,82,0.08);
+  color: #ff5252;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ev-reject-btn:hover {
+  background: rgba(255,82,82,0.2);
+  border-color: rgba(255,82,82,0.7);
+  transform: scale(1.1);
+  box-shadow: 0 4px 14px rgba(255,82,82,0.3);
+}
+</style>
+{% endblock %}

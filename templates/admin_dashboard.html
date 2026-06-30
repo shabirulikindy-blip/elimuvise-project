@@ -17,30 +17,35 @@
     <h2>Admin Dashboard</h2>
     <p class="text-muted">Approval queue first. Everything else is below.</p>
   </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'admin_schools' %}" class="btn btn-success">
+      <i class="bi bi-building me-1"></i> Browse Schools
+    </a>
+  </div>
 </div>
 
 <div class="row g-4 mb-4">
   <div class="col-md-4">
-    <div class="card shadow-sm border-0 bg-danger text-white">
+    <div class="card shadow-sm border-0" style="background:linear-gradient(135deg,#b71c1c,#e53935);">
       <div class="card-body">
-        <h5 class="mb-1">Pending Approvals</h5>
-        <h2 class="mb-0">{{ pending_count|default:0 }}</h2>
+        <h5 class="mb-1" style="color:#ffcdd2;">Pending Approvals</h5>
+        <h2 class="mb-0" style="color:#fff;">{{ pending_count|default:0 }}</h2>
       </div>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0" style="background:linear-gradient(135deg,#0d47a1,#1565c0);">
       <div class="card-body">
-        <h5 class="mb-1">Total Students</h5>
-        <h2 class="mb-0">{{ total_students }}</h2>
+        <h5 class="mb-1" style="color:#bbdefb;">Total Students</h5>
+        <h2 class="mb-0" style="color:#fff;">{{ total_students }}</h2>
       </div>
     </div>
   </div>
   <div class="col-md-4">
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);">
       <div class="card-body">
-        <h5 class="mb-1">Total Advisors</h5>
-        <h2 class="mb-0">{{ total_teachers }}</h2>
+        <h5 class="mb-1" style="color:#c8e6c9;">Total Advisors</h5>
+        <h2 class="mb-0" style="color:#fff;">{{ total_teachers }}</h2>
       </div>
     </div>
   </div>
@@ -85,7 +90,7 @@
             {% for user in pending_users %}
               <tr class="user-row" data-user-id="{{ user.id }}">
                 <td>
-                  <span class="badge {% if user.role == 'advisor' %}bg-primary{% else %}bg-secondary{% endif %}">
+                  <span class="badge" style="{% if user.role == 'advisor' %}background:rgba(77,182,255,0.2);color:#4db6ff;border:1px solid rgba(77,182,255,0.35);{% else %}background:rgba(255,255,255,0.1);color:#b0bec5;border:1px solid rgba(255,255,255,0.15);{% endif %}">
                     {{ user.role|upper }}
                   </span>
                 </td>

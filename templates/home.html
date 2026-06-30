@@ -1,69 +1,98 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="hero bg-gradient-primary text-white py-5 mb-5">
-  <div class="container">
+<style>
+  /* Hakikisha majina yote ya majukumu yanaonekana kwa rangi nyeupe/dhahabu angavu */
+  .role-card h6 {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+  .role-card.active h6 {
+    color: var(--gold-400) !important;
+  }
+  .role-card .role-icon {
+    color: #a8cbf0 !important;
+  }
+  .role-card.active .role-icon {
+    color: var(--gold-400) !important;
+  }
+</style>
+<div class="tz-hero py-5 mb-5">
+  <div class="container position-relative" style="z-index:1">
     <div class="row align-items-center">
       <div class="col-lg-7">
-        <span class="badge bg-light text-info mb-3 fs-6">ElimuVise</span>
-        <h1 class="display-4 fw-bold mb-3">Empowering Education Through Smart Guidance</h1>
-        <p class="lead mb-4 opacity-75">ElimuVise is an AI based academic support platform designed to predict student performance and provide eary guidance to prevent academic risk.</p>
-        <p class="text-white-50 mb-4">Real-time learning insights, predictive performance alerts, and role-specific dashboards designed for modern schools and education teams. It act as smart"early warning system"to analyses a students data to flag if they are at "RISK" before final exams happen</p>
+        <span class="badge badge-tz-gold mb-3 fs-6 px-3 py-2">
+          <i class="bi bi-shield-fill-check me-1"></i>ElimuVise system
+        </span>
+        <h1 class="display-4 fw-bold mb-3" style="
+          background: linear-gradient(135deg, #e8f4ff 0%, #93c5fd 40%, #FFC000 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1.2;
+        ">Empowering Education Through Smart Guidance</h1>
+        <p class="lead mb-4" style="color:rgba(232,244,255,0.8);">ElimuVise is an AI based academic support platform designed to predict student performance and provide early guidance to prevent academic risk.</p>
+        <p class="mb-4" style="color:rgba(232,244,255,0.55);">Real-time learning insights, predictive performance alerts, and role-specific dashboards designed for modern schools and education teams. It acts as a smart &ldquo;early warning system&rdquo; to analyse student data and flag those at <strong style="color:var(--gold-400)">&ldquo;RISK&rdquo;</strong> before final exams happen.</p>
         <div class="d-flex flex-wrap gap-3">
           {% if user.is_authenticated %}
             {% if user.role == 'advisor' %}
-              <a href="{% url 'advisor_portal' %}" class="btn btn-light btn-lg px-4 py-2">
+              <a href="{% url 'advisor_portal' %}" class="btn btn-primary btn-lg px-4 py-2">
                 <i class="bi bi-person-badge me-2"></i>Advisor Portal
               </a>
-              <a href="{% url 'upload_results' %}" class="btn btn-outline-light btn-lg px-4 py-2">
+              <a href="{% url 'upload_results' %}" class="btn btn-outline-warning btn-lg px-4 py-2">
                 <i class="bi bi-cloud-upload me-2"></i>Upload Results
               </a>
             {% elif user.role == 'parent' %}
-              <a href="{% url 'parent_portal' %}" class="btn btn-light btn-lg px-4 py-2">
+              <a href="{% url 'parent_portal' %}" class="btn btn-success btn-lg px-4 py-2">
                 <i class="bi bi-house-heart me-2"></i>Parent Portal
               </a>
             {% elif user.role == 'student' %}
-              <a href="{% url 'student_dashboard' %}" class="btn btn-light btn-lg px-4 py-2">
+              <a href="{% url 'student_dashboard' %}" class="btn btn-primary btn-lg px-4 py-2">
                 <i class="bi bi-mortarboard me-2"></i>Student Dashboard
               </a>
             {% elif user.role == 'admin' or user.is_staff %}
-              <a href="{% url 'admin_dashboard' %}" class="btn btn-light btn-lg px-4 py-2">
+              <a href="{% url 'admin_dashboard' %}" class="btn btn-warning btn-lg px-4 py-2">
                 <i class="bi bi-speedometer2 me-2"></i>Admin Dashboard
               </a>
             {% else %}
-              <a href="{% url 'account_settings' %}" class="btn btn-light btn-lg px-4 py-2">
+              <a href="{% url 'account_settings' %}" class="btn btn-secondary btn-lg px-4 py-2">
                 <i class="bi bi-gear me-2"></i>Account Settings
               </a>
             {% endif %}
           {% else %}
-            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 py-2">
-              <i class="bi bi-person-plus me-2"></i>Get Started
+            <a href="{% url 'index' %}" class="btn btn-outline-light btn-lg px-4 py-2">
+              <i class="bi bi-house me-2"></i>Home
             </a>
-            <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4 py-2">
-              <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            <a href="{% url 'register' %}" class="btn btn-warning btn-lg px-4 py-2 auth-trigger" data-auth="register">
+              <i class="bi bi-person-plus me-2"></i>Register
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 py-2 auth-trigger" data-auth="login">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Login
             </a>
           {% endif %}
         </div>
       </div>
       <div class="col-lg-5 text-center mt-4 mt-lg-0">
-        <div class="hero-card bg-white text-dark p-4 rounded-4 shadow-lg">
-          <span class="badge bg-info text-white mb-3">THE JOURNEY TO SUCCESS</span>
-          <i class="bi bi-shield-check display-4 text-info mb-3"></i>
-          <h4 class="mb-3">Secure Role-Based Access</h4>
-          <p class="text-muted mb-4">welcome to ElimuVISE to bring the gap between complex artificial intelligence and everyday schooling,ensuring that data turns into clear,actionable advice to help student succeed.</p>
-          <div class="d-grid gap-2">
-            <a class="btn btn-outline-primary" href="{% url 'register' %}?role=advisor">
-              <i class="bi bi-person-badge me-2"></i>Advisor
-            </a>
-            <a class="btn btn-outline-primary" href="{% url 'register' %}?role=parent">
-              <i class="bi bi-house-heart me-2"></i>Parent
-            </a>
-            <a class="btn btn-outline-primary" href="{% url 'login' %}">
-              <i class="bi bi-mortarboard me-2"></i>Student
-            </a>
-            <a class="btn btn-outline-primary" href="{% url 'login' %}">
-              <i class="bi bi-gear me-2"></i>Admin
-            </a>
+        <div class="card tz-cta-card p-4 h-100">
+          <div class="card-body">
+            <span class="badge badge-tz-gold mb-3">THE JOURNEY TO SUCCESS</span>
+            <i class="bi bi-shield-check tz-icon-gold display-4 mb-3 d-block"></i>
+            <h4 class="mb-3" style="color:var(--text-primary) !important">Secure Role-Based Access</h4>
+            <p class="mb-4" style="color:rgba(232,244,255,0.65);">Welcome to ElimuVISE — bridging the gap between complex artificial intelligence and everyday schooling, ensuring data turns into clear, actionable advice to help students succeed.</p>
+            <div class="d-grid gap-2">
+              <a class="btn btn-outline-primary auth-trigger" href="{% url 'register' %}?role=advisor" data-auth="login" data-role="advisor">
+                <i class="bi bi-person-badge me-2"></i>Advisor
+              </a>
+              <a class="btn btn-outline-success auth-trigger" href="{% url 'register' %}?role=parent" data-auth="login" data-role="parent">
+                <i class="bi bi-house-heart me-2"></i>Parent
+              </a>
+              <a class="btn btn-outline-warning auth-trigger" href="{% url 'login' %}" data-auth="login">
+                <i class="bi bi-mortarboard me-2"></i>Student
+              </a>
+              <a class="btn btn-outline-secondary auth-trigger" href="{% url 'login' %}" data-auth="login">
+                <i class="bi bi-gear me-2"></i>Admin
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -124,30 +153,31 @@
 {% endif %}
 
 <div class="container">
+  <hr class="tz-divider">
   <div class="row gy-4 mb-5">
     <div class="col-lg-4">
-      <div class="card h-100 shadow-sm border-0 bg-light">
-        <div class="card-body text-center">
-          <i class="bi bi-person-badge text-primary display-4 mb-3"></i>
-          <h5 class="card-title">For Advisors</h5>
+      <div class="card h-100 shadow-sm border-0 tz-role-card blue">
+        <div class="card-body text-center py-4">
+          <i class="bi bi-person-badge tz-icon-blue display-4 mb-3 d-block"></i>
+          <h5 class="card-title" style="color:var(--blue-300) !important">For Advisors</h5>
           <p class="card-text">Manage students, monitor academic risks, and deliver data-driven support with full admin oversight.</p>
         </div>
       </div>
     </div>
     <div class="col-lg-4">
-      <div class="card h-100 shadow-sm border-0 bg-light">
-        <div class="card-body text-center">
-          <i class="bi bi-house-heart text-success display-4 mb-3"></i>
-          <h5 class="card-title">For Parents</h5>
+      <div class="card h-100 shadow-sm border-0 tz-role-card green">
+        <div class="card-body text-center py-4">
+          <i class="bi bi-house-heart tz-icon-green display-4 mb-3 d-block"></i>
+          <h5 class="card-title" style="color:var(--green-300) !important">For Parents</h5>
           <p class="card-text">Stay informed about your child's progress, receive alerts, and communicate securely with advisors.</p>
         </div>
       </div>
     </div>
     <div class="col-lg-4">
-      <div class="card h-100 shadow-sm border-0 bg-light">
-        <div class="card-body text-center">
-          <i class="bi bi-gear text-warning display-4 mb-3"></i>
-          <h5 class="card-title">For Administrators</h5>
+      <div class="card h-100 shadow-sm border-0 tz-role-card gold">
+        <div class="card-body text-center py-4">
+          <i class="bi bi-gear tz-icon-gold display-4 mb-3 d-block"></i>
+          <h5 class="card-title" style="color:var(--gold-300) !important">For Administrators</h5>
           <p class="card-text">Oversee all system activities, approve registrations, and access comprehensive institutional analytics.</p>
         </div>
       </div>
@@ -156,57 +186,58 @@
 
   <div class="row align-items-center mb-5">
     <div class="col-lg-7">
+      <div class="tz-gold-line"></div>
       <h2 class="mb-4">Why Choose ElimuVise?</h2>
       <div class="row gy-3">
         <div class="col-md-6">
           <div class="d-flex align-items-start">
-            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+            <i class="bi bi-check-circle-fill tz-icon-blue me-3 mt-1 fs-5"></i>
             <div>
-              <h6>Role-Based Security</h6>
+              <h6 style="color:var(--blue-300) !important">Role-Based Security</h6>
               <p class="text-muted small">Secure access with admin-approved registrations for advisors, parents, students, and admins.</p>
             </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="d-flex align-items-start">
-            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+            <i class="bi bi-check-circle-fill tz-icon-green me-3 mt-1 fs-5"></i>
             <div>
-              <h6>AI-Powered Insights</h6>
+              <h6 style="color:var(--green-300) !important">AI-Powered Insights</h6>
               <p class="text-muted small">Rule-based prediction workflows built to surface academic risk and support early intervention.</p>
             </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="d-flex align-items-start">
-            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+            <i class="bi bi-check-circle-fill tz-icon-gold me-3 mt-1 fs-5"></i>
             <div>
-              <h6>Transparent Communication</h6>
+              <h6 style="color:var(--gold-300) !important">Transparent Communication</h6>
               <p class="text-muted small">Real-time alerts and feedback loops keep students, advisors, and parents aligned.</p>
             </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="d-flex align-items-start">
-            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+            <i class="bi bi-check-circle-fill tz-icon-blue me-3 mt-1 fs-5"></i>
             <div>
-              <h6>PostgreSQL Backend</h6>
-              <p class="text-muted small">A robust PostgreSQL database ensures secure, scalable storage for student and school data.</p>
+              <h6 style="color:var(--blue-300) !important">High Security</h6>
+              <p class="text-muted small">ElimuVise ensures high security through user authentication, role-based access control, session management, and secure storage of student academic data to prevent unauthorized access and protect privacy.</p>
             </div>
           </div>
         </div>
       </div>
     </div>
     <div class="col-lg-5">
-      <div class="card shadow-lg border-0 bg-primary text-white p-4 h-100">
+      <div class="card shadow-lg border-0 tz-cta-card p-4 h-100 tz-watermark">
         <div class="card-body">
-          <i class="bi bi-lightning-charge display-4 mb-3"></i>
-          <h4 class="card-title">Get Started Today</h4>
-          <p class="card-text opacity-75">Join the ElimuVise community and transform the way education is managed. Register your role and await admin approval to begin.</p>
+          <i class="bi bi-lightning-charge tz-icon-gold display-4 mb-3 d-block"></i>
+          <h4 class="card-title" style="color:var(--gold-300) !important">Get Started Today</h4>
+          <p class="card-text" style="color:rgba(232,244,255,0.7);">Join the ElimuVise community and transform the way education is managed. Register your role and await admin approval to begin.</p>
           <div class="mt-4">
-            <a href="{% url 'register' %}" class="btn btn-light me-2">
+            <a href="#" class="btn btn-warning me-2 auth-trigger" data-auth="register">
               <i class="bi bi-person-plus me-1"></i>Register
             </a>
-            <a href="{% url 'login' %}" class="btn btn-outline-light">
+            <a href="#" class="btn btn-outline-success auth-trigger" data-auth="login">
               <i class="bi bi-box-arrow-in-right me-1"></i>Login
             </a>
           </div>
@@ -215,4 +246,646 @@
     </div>
   </div>
 </div>
+
+<!-- Side Panel Modal for Unified Auth -->
+<div class="modal fade side-panel" id="authSidePanel" tabindex="-1" aria-labelledby="authSidePanelLabel" aria-hidden="true" data-bs-backdrop="true">
+  <div class="modal-dialog">
+    <div class="modal-content position-relative">
+      
+      <!-- Loading Overlay -->
+      <div id="authLoading" class="loading-overlay d-none">
+        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Close Button -->
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <!-- Auth Navigation Tabs -->
+        <div class="auth-nav-tabs">
+          <span id="tab-login" class="auth-nav-link active" onclick="switchAuthTab('login')">Sign In</span>
+          <span id="tab-register" class="auth-nav-link" onclick="switchAuthTab('register')">Register</span>
+        </div>
+
+        <!-- Error/Success Alerts container inside modal -->
+        <div id="authAlerts" class="mb-4"></div>
+
+        <!-- LOGIN FORM CONTAINER -->
+        <div id="authLoginFormContainer">
+          <div class="mb-4">
+            <h4 class="fw-extrabold text-primary mb-1">Welcome Back!</h4>
+            <p class="text-muted small">Access your ElimuVISE portal and check your dashboard</p>
+          </div>
+          <form id="popupLoginForm" method="post" novalidate>
+            {% csrf_token %}
+    <input type="hidden" name="role" id="login-role-input" value="">
+            <input type="hidden" name="next" id="loginNextInput" value="">
+            
+            <div class="mb-3">
+              <label for="popupEmail" class="form-label text-muted small mb-1">Email Address or Username</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                <input type="text" class="form-control form-control-with-icon" id="popupEmail" name="email" placeholder="name@school.com" required>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="popupPassword" class="form-label text-muted small mb-1">Password</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control form-control-password" id="popupPassword" name="password" placeholder="••••••••" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePopupPassword(this)"><i class="bi bi-eye"></i></button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm">
+              Sign In <i class="bi bi-box-arrow-in-right ms-1"></i>
+            </button>
+          </form>
+          <div class="mt-4 text-center">
+            <p class="text-muted mb-0" style="font-size: 0.85rem;">
+              Don't have an account? <a href="#" id="linkToRegister" class="text-primary fw-bold text-decoration-none">Register here</a>
+            </p>
+          </div>
+        </div>
+
+        <!-- REGISTER FORM CONTAINER -->
+        <div id="authRegisterFormContainer" class="d-none">
+          <div class="mb-4">
+            <h4 class="fw-extrabold text-primary mb-1">Create Account</h4>
+            <p class="text-muted small">Join ElimuVISE and access early warning insights</p>
+          </div>
+          
+          <!-- Step Indicator -->
+          <div class="step-indicator mb-4 justify-content-start">
+            <div class="step-dot active" id="popup-dot-1"></div>
+            <div class="step-dot" id="popup-dot-2"></div>
+          </div>
+
+          <form id="popupRegisterForm" method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="rule" id="popup-rule-input" value="">
+
+            <!-- STEP 1: SELECT ROLE -->
+            <div id="popup-step-1-content">
+              <h6 class="mb-3 text-muted small">Choose your role:</h6>
+              
+              <div class="row g-3 mb-4">
+                <div class="col-6">
+                  <div class="role-card p-3 text-center" id="role-btn-advisor" onclick="selectPopupRole('advisor')">
+                    <div class="check-badge"><i class="bi bi-check-lg" style="font-size: 0.65rem;"></i></div>
+                    <div class="role-icon mb-2" style="font-size: 1.8rem;"><i class="bi bi-mortarboard"></i></div>
+                    <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">Advisor</h6>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="role-card p-3 text-center" id="role-btn-parent" onclick="selectPopupRole('parent')">
+                    <div class="check-badge"><i class="bi bi-check-lg" style="font-size: 0.65rem;"></i></div>
+                    <div class="role-icon mb-2" style="font-size: 1.8rem;"><i class="bi bi-people"></i></div>
+                    <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">Parent</h6>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="role-card p-3 text-center" id="role-btn-student" onclick="selectPopupRole('student')">
+                    <div class="check-badge"><i class="bi bi-check-lg" style="font-size: 0.65rem;"></i></div>
+                    <div class="role-icon mb-2" style="font-size: 1.8rem;"><i class="bi bi-person-badge"></i></div>
+                    <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">Student</h6>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="role-card p-3 text-center" id="role-btn-admin" onclick="selectPopupRole('admin')">
+                    <div class="check-badge"><i class="bi bi-check-lg" style="font-size: 0.65rem;"></i></div>
+                    <div class="role-icon mb-2" style="font-size: 1.8rem;"><i class="bi bi-gear"></i></div>
+                    <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">Admin</h6>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notices/Warnings -->
+              <div id="popup-student-warning" class="alert alert-info d-none text-center py-2 px-3 mb-4" style="font-size: 0.8rem;">
+                <i class="bi bi-info-circle-fill me-1"></i>
+                <strong>Student accounts are registered by Advisors.</strong> Please contact your school advisor.
+              </div>
+              <div id="popup-admin-warning" class="alert alert-warning d-none text-center py-2 px-3 mb-4" style="font-size: 0.8rem;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                <strong>Admin registration is not allowed.</strong> Contact system administrator.
+              </div>
+
+              <button class="btn btn-primary w-100 py-2 fw-bold" type="button" id="popup-btn-next" onclick="goToPopupStep2()" disabled>
+                Next Step <i class="bi bi-arrow-right ms-1"></i>
+              </button>
+            </div>
+
+            <!-- STEP 2: FIELDS FORM -->
+            <div id="popup-step-2-content" class="d-none">
+              <h5 class="form-section-title mb-4" id="popup-form-title" style="font-size: 1.1rem; font-weight: 700;">Account Details</h5>
+
+              <!-- Advisor Specific Fields -->
+              <div id="popup-advisor-fields" class="d-none">
+                <div class="row g-2">
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Full Name</label>
+                    <input class="form-control" name="name" type="text" placeholder="e.g. Sarah Mrema" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Email Address</label>
+                    <input class="form-control" name="email" type="email" placeholder="name@school.com" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Password</label>
+                    <div class="input-group">
+                      <input class="form-control form-control-password" name="password" type="password" placeholder="••••••••" minlength="6" disabled>
+                      <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePopupPassword(this)"><i class="bi bi-eye"></i></button>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">School Name</label>
+                    <input class="form-control" name="school_name" type="text" placeholder="e.g. Elimu Secondary School" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Teaching Subjects</label>
+                    <input class="form-control" name="subjects" type="text" placeholder="e.g. Physics, Mathematics" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Phone Number</label>
+                    <input class="form-control" name="phone" type="text" placeholder="e.g. +255 712 345 678" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Home Address</label>
+                    <textarea class="form-control" name="home_address" rows="2" placeholder="Residential address" disabled></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Parent Specific Fields -->
+              <div id="popup-parent-fields" class="d-none">
+                <div class="row g-2">
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Full Name</label>
+                    <input class="form-control" name="name" type="text" placeholder="e.g. Jane Doe" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Email Address</label>
+                    <input class="form-control" name="email" type="email" placeholder="jane.doe@gmail.com" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Phone Number</label>
+                    <input class="form-control" name="phone" type="text" placeholder="e.g. +255 712 345 678" disabled>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Password</label>
+                    <div class="input-group">
+                      <input class="form-control form-control-password" name="password" type="password" placeholder="••••••••" minlength="6" disabled>
+                      <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePopupPassword(this)"><i class="bi bi-eye"></i></button>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label text-muted small mb-1">Home Address</label>
+                    <textarea class="form-control" name="home_address" rows="2" placeholder="Residential address" disabled></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation -->
+              <div class="mt-4 d-flex justify-content-between gap-2">
+                <button class="btn btn-outline-secondary px-3 py-2 fw-bold w-50" type="button" onclick="goToPopupStep1()">
+                  <i class="bi bi-arrow-left me-1"></i> Back
+                </button>
+                <button class="btn btn-primary px-3 py-2 fw-bold w-50" type="submit">
+                  Register <i class="bi bi-check-circle ms-1"></i>
+                </button>
+              </div>
+            </div>
+
+          </form>
+          <div class="mt-4 text-center">
+            <p class="text-muted mb-0" style="font-size: 0.85rem;">
+              Already have an account? <a href="#" id="linkToLogin" class="text-primary fw-bold text-decoration-none">Sign in here</a>
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function getCsrfToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, 10) === 'csrftoken=') {
+          cookieValue = decodeURIComponent(cookie.substring(10));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  let authModal;
+  let selectedRoleFromButton = null;
+  
+  function togglePopupPassword(btn) {
+    const input = btn.previousElementSibling;
+    const icon = btn.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace('bi-eye', 'bi-eye-slash');
+    } else {
+      input.type = "password";
+      icon.classList.replace('bi-eye-slash', 'bi-eye');
+    }
+  }
+
+  function switchAuthTab(tab) {
+    const loginTab = document.getElementById('tab-login');
+    const registerTab = document.getElementById('tab-register');
+    const loginForm = document.getElementById('authLoginFormContainer');
+    const registerForm = document.getElementById('authRegisterFormContainer');
+    
+    // Reset alerts
+    document.getElementById('authAlerts').innerHTML = '';
+
+    // Clear input fields when switching tabs
+    const lForm = document.getElementById('popupLoginForm');
+    if (lForm) lForm.reset();
+    const rForm = document.getElementById('popupRegisterForm');
+    if (rForm) rForm.reset();
+
+    if (tab === 'login') {
+      loginTab.classList.add('active');
+      registerTab.classList.remove('active');
+      loginForm.classList.remove('d-none');
+      registerForm.classList.add('d-none');
+    } else {
+      registerTab.classList.add('active');
+      loginTab.classList.remove('active');
+      registerForm.classList.remove('d-none');
+      loginForm.classList.add('d-none');
+    }
+  }
+
+  function selectPopupRole(role) {
+    const roleInput = document.getElementById('popup-rule-input');
+    const warningStudent = document.getElementById('popup-student-warning');
+    const warningAdmin = document.getElementById('popup-admin-warning');
+    const nextBtn = document.getElementById('popup-btn-next');
+    
+    // Clear registration fields when changing role to avoid cross-contamination
+    const registerForm = document.getElementById('popupRegisterForm');
+    if (registerForm) {
+      registerForm.reset();
+    }
+    
+    // Set active states on cards
+    document.querySelectorAll('#authRegisterFormContainer .role-card').forEach(card => {
+      card.classList.remove('active');
+    });
+
+    const card = document.getElementById('role-btn-' + role);
+    if (card) {
+      card.classList.add('active');
+    }
+
+    roleInput.value = role;
+    
+    // Reset warnings
+    warningStudent.classList.add('d-none');
+    warningAdmin.classList.add('d-none');
+    
+    if (role === 'student') {
+      warningStudent.classList.remove('d-none');
+      nextBtn.disabled = true;
+    } else if (role === 'admin') {
+      warningAdmin.classList.remove('d-none');
+      nextBtn.disabled = true;
+    } else {
+      nextBtn.disabled = false;
+    }
+  }
+
+  function goToPopupStep2() {
+    const role = document.getElementById('popup-rule-input').value;
+    if (!role || role === 'student' || role === 'admin') return;
+
+    document.getElementById('popup-step-1-content').classList.add('d-none');
+    document.getElementById('popup-step-2-content').classList.remove('d-none');
+    document.getElementById('popup-dot-1').classList.remove('active');
+    document.getElementById('popup-dot-2').classList.add('active');
+
+    const formTitle = document.getElementById('popup-form-title');
+    const advisorFields = document.getElementById('popup-advisor-fields');
+    const parentFields = document.getElementById('popup-parent-fields');
+
+    if (role === 'advisor') {
+      formTitle.innerText = "Advisor Registration";
+      advisorFields.classList.remove('d-none');
+      parentFields.classList.add('d-none');
+      togglePopupFields(advisorFields, true);
+      togglePopupFields(parentFields, false);
+    } else if (role === 'parent') {
+      formTitle.innerText = "Parent Registration";
+      parentFields.classList.remove('d-none');
+      advisorFields.classList.add('d-none');
+      togglePopupFields(parentFields, true);
+      togglePopupFields(advisorFields, false);
+    }
+  }
+
+  function goToPopupStep1() {
+    document.getElementById('popup-step-2-content').classList.add('d-none');
+    document.getElementById('popup-step-1-content').classList.remove('d-none');
+    document.getElementById('popup-dot-2').classList.remove('active');
+    document.getElementById('popup-dot-1').classList.add('active');
+  }
+
+  function togglePopupFields(container, enable) {
+    container.querySelectorAll('input, textarea').forEach(field => {
+      field.disabled = !enable;
+      if (enable) {
+        field.setAttribute('required', 'required');
+      } else {
+        field.removeAttribute('required');
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const modalEl = document.getElementById('authSidePanel');
+    if (!modalEl) return;
+    
+    authModal = new bootstrap.Modal(modalEl);
+    
+    // Dynamically override backdrop style on show and reset form states
+    modalEl.addEventListener('show.bs.modal', () => {
+      // Clear forms
+      const lForm = document.getElementById('popupLoginForm');
+      if (lForm) lForm.reset();
+      const rForm = document.getElementById('popupRegisterForm');
+      if (rForm) rForm.reset();
+      
+      // Clear alerts
+      const alertsContainer = document.getElementById('authAlerts');
+      if (alertsContainer) alertsContainer.innerHTML = '';
+
+      setTimeout(() => {
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+          backdrop.classList.add('side-panel-backdrop');
+        }
+      }, 0);
+    });
+
+    // Reset forms and view step state when hidden
+    modalEl.addEventListener('hidden.bs.modal', () => {
+      // Clear forms
+      const lForm = document.getElementById('popupLoginForm');
+      if (lForm) lForm.reset();
+      const rForm = document.getElementById('popupRegisterForm');
+      if (rForm) rForm.reset();
+      
+      // Reset hidden role inputs
+      const loginRoleInput = document.getElementById('login-role-input');
+      if (loginRoleInput) loginRoleInput.value = '';
+      const popupRoleInput = document.getElementById('popup-rule-input');
+      if (popupRoleInput) popupRoleInput.value = '';
+      
+      // Clear alerts
+      const alertsContainer = document.getElementById('authAlerts');
+      if (alertsContainer) alertsContainer.innerHTML = '';
+      
+      // Reset step visibility
+      document.getElementById('popup-step-1-content').classList.remove('d-none');
+      document.getElementById('popup-step-2-content').classList.add('d-none');
+      document.getElementById('popup-dot-1').classList.add('active');
+      document.getElementById('popup-dot-2').classList.remove('active');
+      
+      // Reset role cards active states
+      document.querySelectorAll('#authRegisterFormContainer .role-card').forEach(card => card.classList.remove('active'));
+    });
+
+    // Intercept clicks on links that are auth-triggers
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('.auth-trigger');
+      if (trigger) {
+        e.preventDefault();
+        const authAction = trigger.getAttribute('data-auth') || 'login';
+        const initialRole = trigger.getAttribute('data-role');
+
+        selectedRoleFromButton = initialRole || null;
+
+        switchAuthTab(authAction);
+
+        if (authAction === 'register') {
+          goToPopupStep1();
+          if (initialRole) {
+            selectPopupRole(initialRole);
+            goToPopupStep2();
+          } else {
+            // reset role selector
+            document.getElementById('popup-rule-input').value = '';
+            document.getElementById('popup-btn-next').disabled = true;
+            document.querySelectorAll('#authRegisterFormContainer .role-card').forEach(card => card.classList.remove('active'));
+          }
+        } else if (authAction === 'login') {
+          // Set role for login if provided
+          document.getElementById('login-role-input').value = initialRole || '';
+        }
+
+        authModal.show();
+      }
+    });
+
+    // Register link inside login form
+    const linkToRegister = document.getElementById('linkToRegister');
+    if (linkToRegister) {
+      linkToRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchAuthTab('register');
+        goToPopupStep1();
+        if (selectedRoleFromButton) {
+          selectPopupRole(selectedRoleFromButton);
+          goToPopupStep2();
+        } else {
+          // reset role selector
+          document.getElementById('popup-rule-input').value = '';
+          document.getElementById('popup-btn-next').disabled = true;
+          document.querySelectorAll('#authRegisterFormContainer .role-card').forEach(card => card.classList.remove('active'));
+        }
+      });
+    }
+
+    // Login link inside register form
+    const linkToLogin = document.getElementById('linkToLogin');
+    if (linkToLogin) {
+      linkToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchAuthTab('login');
+      });
+    }
+
+    // Handle initial parameters in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const authParam = urlParams.get('auth');
+    const roleParam = urlParams.get('role');
+    const nextParam = urlParams.get('next');
+
+    if (nextParam) {
+      document.getElementById('loginNextInput').value = nextParam;
+    }
+
+    if (authParam === 'login' || authParam === 'register') {
+      selectedRoleFromButton = roleParam || null;
+      switchAuthTab(authParam);
+      if (authParam === 'register') {
+        goToPopupStep1();
+        if (roleParam) {
+          selectPopupRole(roleParam);
+          goToPopupStep2();
+        }
+      }
+      authModal.show();
+    }
+
+    // Ajax Form Submission for Login
+    const loginForm = document.getElementById('popupLoginForm');
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const emailVal = document.getElementById('popupEmail').value.trim();
+      const passVal = document.getElementById('popupPassword').value;
+      const nextVal = document.getElementById('loginNextInput').value;
+      const alertsContainer = document.getElementById('authAlerts');
+      alertsContainer.innerHTML = '';
+      
+      if (!emailVal || !passVal) {
+        alertsContainer.innerHTML = `<div class="alert alert-danger py-2 px-3" role="alert" style="font-size:0.85rem;"><i class="bi bi-exclamation-circle me-1"></i>Please fill in all fields.</div>`;
+        return;
+      }
+
+      document.getElementById('authLoading').classList.remove('d-none');
+      
+      const formData = new FormData(loginForm);
+      if (nextVal) {
+        formData.append('next', nextVal);
+      }
+      
+      const csrfToken = getCsrfToken() || formData.get('csrfmiddlewaretoken');
+      formData.delete('csrfmiddlewaretoken');
+      
+      fetch('/login/', {
+        credentials: 'same-origin',
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      })
+      .then(response => {
+          // Hide loading spinner
+          document.getElementById('authLoading').classList.add('d-none');
+          // Check if response is JSON
+          const contentType = response.headers.get('content-type') || '';
+          if (!response.ok) {
+            if (contentType.includes('application/json')) {
+              return response.json().then(data => {
+                throw new Error(data.message || 'Login failed');
+              });
+            } else {
+              return response.text().then(text => {
+                throw new Error(text || 'Login failed');
+              });
+            }
+          }
+          if (!contentType.includes('application/json')) {
+            // Unexpected content type
+            return response.text().then(text => {
+              throw new Error('Invalid server response');
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          alertsContainer.innerHTML = `<div class="alert alert-success py-2 px-3" role="alert" style="font-size:0.85rem;"><i class="bi bi-check-circle me-1"></i>Logged in successfully. Redirecting...</div>`;
+          // Reset login form fields
+          loginForm.reset();
+          setTimeout(() => {
+            window.location.href = data.redirect_url;
+          }, 800);
+        })
+        .catch(err => {
+          document.getElementById('authLoading').classList.add('d-none');
+          alertsContainer.innerHTML = `<div class="alert alert-danger py-2 px-3" role="alert" style="font-size:0.85rem;"><i class="bi bi-exclamation-circle me-1"></i>${err.message}</div>`;
+        });
+    });
+
+    // Ajax Form Submission for Registration
+    const registerForm = document.getElementById('popupRegisterForm');
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const alertsContainer = document.getElementById('authAlerts');
+      alertsContainer.innerHTML = '';
+      
+      const formData = new FormData(registerForm);
+      const rule = formData.get('rule');
+      
+      if (!rule) {
+        alertsContainer.innerHTML = `<div class="alert alert-danger py-2 px-3" role="alert" style="font-size:0.85rem;"><i class="bi bi-exclamation-circle me-1"></i>Please select a role first.</div>`;
+        return;
+      }
+      
+      document.getElementById('authLoading').classList.remove('d-none');
+      
+      const csrfToken = getCsrfToken() || formData.get('csrfmiddlewaretoken');
+      formData.delete('csrfmiddlewaretoken');
+      
+      fetch('/register/', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrfToken
+        },
+        body: formData
+      })
+      .then(response => {
+        document.getElementById('authLoading').classList.add('d-none');
+        return response.json().then(data => {
+          if (!response.ok) {
+            throw new Error(data.message || 'Registration failed.');
+          }
+          return data;
+        });
+      })
+      .then(data => {
+        alertsContainer.innerHTML = `<div class="alert alert-success py-2.5 px-3" role="alert" style="font-size:0.8rem; line-height: 1.4;"><i class="bi bi-check-circle-fill me-1"></i>${data.message}</div>`;
+        
+        // Reset registration form
+        registerForm.reset();
+        goToPopupStep1();
+        
+        // Switch to login tab after 5 seconds
+        setTimeout(() => {
+          switchAuthTab('login');
+        }, 5000);
+      })
+      .catch(err => {
+        alertsContainer.innerHTML = `<div class="alert alert-danger py-2 px-3" role="alert" style="font-size:0.85rem;"><i class="bi bi-exclamation-circle me-1"></i>${err.message}</div>`;
+      });
+    });
+
+  });
+</script>
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from dashboard.models import Student, Result, Alert, SystemLog, Notification
+from dashboard.models import Student, Result, Alert, SystemLog, Notification, AdvisoryNote
+
 
 User = get_user_model()
 
@@ -97,9 +98,22 @@ class Command(BaseCommand):
             role='parent',
             approved=True,
             first_name='Jane',
-            last_name='Doe'
+            last_name='Doe',
+            school_name='ElimuVISE Academic Center'
         )
-        self.stdout.write('OK: Seeded Parent: parent@example.com / parent123')
+        # Link parent to student (commented out to allow verification flow testing)
+        # student_profile.parent = parent_user
+        # student_profile.save()
+        
+        # Seed Advisory Note
+        AdvisoryNote.objects.create(
+            student=student_profile,
+            advisor=advisor_user,
+            note_text="Reviewed initial academic performance. Strong attendance rate (94.5%) and excellent results in Physics and Mathematics. Recommend continuation of PCM path and monitoring of Chemistry outcomes."
+        )
+        self.stdout.write('OK: Seeded Parent (unlinked by default for verification testing) with sample advisory note.')
+
+
 
         # 4b. Create Pending users for admin approval testing
         User.objects.create_user(

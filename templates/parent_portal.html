@@ -2,58 +2,177 @@
 {% block branding %}
 <div class="branding-hero">
   <div class="brand-left">
-    <span class="badge-brand">ElimuVise</span>
-    <h1>Empowering Education Through Smart Guidance</h1>
-    <p>Stay connected with your child's academic journey. Monitor progress, receive alerts, and collaborate with advisors.</p>
+    <span class="badge-brand">ElimuVise Parent Portal</span>
+    <h1>Stay Connected with Your Child's Progress</h1>
+    <p>Monitor academic performance, attendance logs, and action-oriented advisory guidelines in real-time.</p>
   </div>
   <div class="brand-right text-center">
-    <i class="bi bi-house-heart" style="font-size: 3.5rem; color: var(--accent-green); opacity: 0.3;"></i>
+    <i class="bi bi-people" style="font-size: 3.5rem; color: var(--accent-green); opacity: 0.3;"></i>
   </div>
 </div>
 {% endblock %}
+
 {% block content %}
-<div class="d-flex align-items-center justify-content-between mb-4">
+{% if child_linked %}
+<!-- ══════════════════ DASHBOARD MODE ══════════════════ -->
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
   <div>
-    <h2>Parent Portal</h2>
-    <p class="text-muted">Transparent Bridge for real-time progress updates.</p>
+    <h2>Student Progress</h2>
+    <p class="text-muted">Academic progress and support profile for {{ student.user.name|default:student.user.username }}.</p>
   </div>
+  {% if linked_students|length > 1 %}
+  <div>
+    <form method="get" action="{% url 'parent_portal' %}" class="d-flex align-items-center gap-2">
+      <label for="student-selector" class="text-white-50 small text-nowrap mb-0"><i class="bi bi-person-check text-success me-1"></i>Select Child:</label>
+      <select id="student-selector" name="student_id" class="form-select form-select-sm text-white" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.15); width: auto; border-radius: 0.5rem;" onchange="this.form.submit()">
+        {% for s in linked_students %}
+          <option value="{{ s.id }}" {% if s.id == student.id %}selected{% endif %} style="background-color: #121824;">
+            {{ s.user.name|default:s.user.username }} ({{ s.form_level }})
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+  {% endif %}
 </div>
-<div class="row g-4">
-  <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Child's Status Summary</h5>
-        <p><strong>Name:</strong> {{ student.user.name }}</p>
-        <p><strong>Form:</strong> {{ student.form_level }}</p>
-        <p><strong>Combination:</strong> {{ student.combination }}</p>
-        <p><strong>Status:</strong> <span class="badge bg-{{ badge_class }}">{{ student.prediction }}</span></p>
-        <div class="progress mt-3" style="height: 20px;">
-          <div class="progress-bar bg-info" role="progressbar" style="width: {{ student.attendance_rate }}%;" aria-valuenow="{{ student.attendance_rate }}" aria-valuemin="0" aria-valuemax="100">Attendance {{ student.attendance_rate }}%</div>
+
+<!-- Row 1: Academic Trends & Breakdown -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem;">
+      <div class="card-body p-4">
+        <h5 class="card-title text-white mb-3"><i class="bi bi-graph-up text-success me-2"></i>Performance Trend</h5>
+        <canvas id="trendChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem;">
+      <div class="card-body p-4">
+        <h5 class="card-title text-white mb-3"><i class="bi bi-book-half text-info me-2"></i>Subject Breakdown</h5>
+        <div class="mb-3 text-white-50 small">
+          <strong>Combination:</strong> <span class="text-white">{{ student.combination }}</span>
+        </div>
+        <div class="list-group list-group-flush bg-transparent">
+          {% for subject, score in subject_breakdown.items %}
+            <div class="list-group-item bg-transparent text-white-50 border-secondary d-flex justify-content-between align-items-center px-0 py-2 small">
+              {{ subject }}
+              <span class="badge bg-secondary rounded-pill">{{ score|floatformat:1 }}</span>
+            </div>
+          {% empty %}
+            <div class="list-group-item bg-transparent text-muted px-0">No subject records available.</div>
+          {% endfor %}
         </div>
       </div>
     </div>
-    <div class="card shadow-sm mt-4">
-      <div class="card-body">
-        <h5 class="card-title">Advisor Contact</h5>
-        <p>If you need follow-up, please contact your advisor directly at <strong>advisor@example.com</strong>.</p>
+  </div>
+</div>
+
+<!-- Row 2: Status Summary & Alert Feed -->
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem;">
+      <div class="card-body p-4">
+        <h5 class="card-title text-white mb-3">Child's Status Summary</h5>
+        <div class="row gy-2 small text-white-50 mb-3">
+          <div class="col-6"><strong>Name:</strong> <span class="text-white">{{ student.user.name|default:student.user.username }}</span></div>
+          <div class="col-6"><strong>Form:</strong> <span class="text-white">{{ student.form_level }}</span></div>
+          <div class="col-6"><strong>Combination:</strong> <span class="text-white">{{ student.combination }}</span></div>
+          <div class="col-6"><strong>Status:</strong> <span class="badge bg-{{ badge_class }}">{{ parent_advisory.simplified_status }}</span></div>
+        </div>
+
+        <div class="mb-3">
+          <span class="text-muted small d-block mb-1">Attendance Rate:</span>
+          <div class="progress" style="height: 22px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+            <div class="progress-bar {% if student.attendance_rate < 80 %}bg-danger{% else %}bg-info{% endif %}" role="progressbar" style="width: {{ student.attendance_rate }}%; font-weight: 700; border-radius: 10px;" aria-valuenow="{{ student.attendance_rate }}" aria-valuemin="0" aria-valuemax="100">
+              {{ student.attendance_rate }}%
+            </div>
+          </div>
+        </div>
+
+        <!-- Rule-Based Simplified Notice -->
+        <div class="p-3 rounded mb-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06);">
+          <strong class="text-white small d-block mb-1"><i class="bi bi-info-circle text-info me-1"></i>Progress Alert Notice:</strong>
+          <p class="text-white-50 mb-0 small">{{ parent_advisory.simplified_alert }}</p>
+        </div>
+
+        <!-- Recommended Home Actions -->
+        <div>
+          <strong class="text-white small d-block mb-2"><i class="bi bi-house-heart text-success me-1"></i>Recommended Home Actions:</strong>
+          <ul class="mb-0 ps-3 small text-white-50">
+            {% for action in parent_advisory.home_actions %}
+              <li class="mb-1">{{ action }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+    <div class="card shadow-sm mt-4 border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem;">
+      <div class="card-body p-4">
+        <h5 class="card-title text-white mb-2">Advisor Contact</h5>
+        {% if primary_advisor %}
+          <p class="text-white-50 mb-0 small">If you have any questions or would like to schedule a conference, please contact your child's advisor directly: <strong class="text-info">{{ primary_advisor.name|default:primary_advisor.username }}</strong> at <strong class="text-info">{{ primary_advisor.email }}</strong>{% if primary_advisor.phone %} (Phone: <strong class="text-info">{{ primary_advisor.phone }}</strong>){% endif %}.</p>
+        {% else %}
+          <p class="text-white-50 mb-0 small">If you have any questions or would like to schedule a conference, please contact your child's school academic advisor.</p>
+        {% endif %}
       </div>
     </div>
   </div>
+  
   <div class="col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">Real-Time Alert Feed</h5>
-        <ul class="list-group list-group-flush">
+    <div class="card shadow-sm border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem;">
+      <div class="card-body p-4">
+        <h5 class="card-title text-white mb-3">Real-Time Alert Feed</h5>
+        <ul class="list-group list-group-flush bg-transparent">
           {% for alert in alerts %}
-            <li class="list-group-item">
-              <strong>{{ alert.created_at|date:"M d" }}</strong> — {{ alert.message }}
+            <li class="list-group-item bg-transparent text-white-50 border-secondary px-0 small">
+              <strong class="text-info">{{ alert.created_at|date:"M d, Y" }}</strong> — {{ alert.message }}
             </li>
-          {% else %}
-            <li class="list-group-item">No alerts at the moment.</li>
+          {% empty %}
+            <li class="list-group-item bg-transparent text-muted px-0">No active alerts at the moment.</li>
           {% endfor %}
         </ul>
       </div>
     </div>
   </div>
 </div>
+
+{% else %}
+<!-- ══════════════════ UNLINKED MODE ══════════════════ -->
+<div class="row justify-content-center py-5">
+  <div class="col-lg-6 col-md-8 text-center">
+    <div class="card shadow-lg border-0" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 1.5rem;">
+      <div class="card-body p-5">
+        <div class="mb-4">
+          <i class="bi bi-shield-lock-fill" style="font-size: 4.5rem; color: var(--accent-orange); opacity: 0.85;"></i>
+        </div>
+        <h3 class="text-white mb-3">No Student Linked</h3>
+        <p class="text-white-50 mb-4">
+          Your parent portal account is active, but you currently have no students associated with your profile. 
+        </p>
+        <div class="p-3 rounded text-start mb-4" style="background: rgba(0, 255, 136, 0.04); border-left: 4px solid #00ff88;">
+          <span class="text-white small d-block mb-1"><strong><i class="bi bi-info-circle me-1 text-success"></i>What should you do?</strong></span>
+          <p class="text-white-50 mb-0 small">
+            Please contact your child's school academic advisor or administrator. They will securely link your parent account to your child's student record. Once linked, their progress, alerts, and trend charts will immediately appear here.
+          </p>
+        </div>
+        <a href="{% url 'index' %}" class="btn btn-outline-light px-4" style="border-radius: 0.75rem;">
+          Return Home
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if child_linked %}
+<script>
+const trendLabels = [{% for result in trend_results %}"{{ result.assessment_name|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+const trendData = [{% for result in trend_results %}{{ result.score }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+createLineChart('trendChart', trendLabels, trendData, 'Grade Trends');
+</script>
+{% endif %}
 {% endblock %}
